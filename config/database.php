@@ -54,14 +54,14 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'host' => env('DB_HOST', 'localhost'),
+            'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'database' => env('DB_DATABASE', 'webcomp'),
+            'username' => env('DB_USERNAME', 'myuser'),
+            'password' => env('DB_PASSWORD', 'myuserpassword12345'),
             'charset' => 'utf8',
             'collation' => 'utf8_unicode_ci',
-            'prefix' => '',
+            /* 'prefix' => '', */
             'strict' => true,
             'engine' => null,
         ],
