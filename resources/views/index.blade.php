@@ -1,29 +1,42 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html>
+
+<head lang="en">
+    <meta charset="UTF-8">
 
     <head>
         <meta charset="utf-8" />
-        <meta name="author" content="Vincent Link, Steffen Lohmann, Eduard Marbach, Stefan Negru" />
-        <meta name="keywords" content="webvowl, vowl, visual notation, web ontology language, owl, rdf, ontology visualization, ontologies, semantic web" />
-        <meta name="description" content="WebVOWL - Web-based Visualization of Ontologies" />
-        <meta name="robots" content="noindex,nofollow" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1">
-        <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="icon" type="image/png" href="{{ URL::asset('favicon-32x32.png') }}" sizes="32x32" />
-
-        @include('main-css')
         <title>Webbed computations</title>
+
+
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+
+        <link rel="stylesheet" type="text/css" href="{{ URL::asset('css/bs_leftnavi.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ URL::asset('css/bottombar.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ URL::asset('css/misc.css') }}">
+
+        <!-- JS -->
+        <script src="{{ URL::asset('js/bs_leftnavi.js') }}"></script>
+
 
     </head>
 
     <body>
-        <main>
-        @include('elements/main-canvas-webvowl')
-        @include('elements/main-rightbar-details')
-        @include('elements/main-lower-optionbar')
-        </main>
 
-        @include('main-scripts')
+<!-- ################################################## -->
+<!-- # To play with the lower right corner -->
+<!-- ################################################## -->
+    <div class="miscspacetotoywith"></div>
+
+    @include('elements/bottombar')
+    @include('elements/sidebar')
+    @include('elements/main')
 
     </body>
 
