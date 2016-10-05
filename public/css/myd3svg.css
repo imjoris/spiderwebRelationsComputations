@@ -9,3 +9,10 @@
   stroke-width: 1.5px;
   r: 5;
 }
+
+
+text {
+    fill: #000;
+    font: 10px sans-serif;
+    pointer-events: none;
+}

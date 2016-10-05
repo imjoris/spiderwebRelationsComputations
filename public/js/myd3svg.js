@@ -23,14 +23,34 @@ function setupSvg() {
 
     var width = window.innerWidth - 320;
     var height = window.innerHeight - 52;
+
+
+    // var zoom = d3.behavior.zoom()
+    var zoom = d3.zoom()
+        .scaleExtent([1, 10])
+        .on("zoom", zoomed);
+
+
+    var margin = {top: -5, right: -5, bottom: -5, left: -5};
     var svg = d3.select("body")
         .append("svg")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+        .call(zoom);
 
-    var svg = d3.select("svg"),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");
+    var container = svg.append("g");
+
+
+
+
+//     var zoom = d3.zoom()
+//         .scaleExtent([1, 40])
+//         .translateExtent([
+//             [-100, -100],
+//             [width + 90, height + 100]
+//         ])
+//         .on("zoom", zoomed);
 
     var color = d3.scaleOrdinal(d3.schemeCategory20);
 
@@ -44,7 +64,7 @@ function setupSvg() {
     d3.json("json/miserables", function(error, graph) {
         if (error) throw error;
 
-        var link = svg.append("g")
+        var link = container.append("g")
             .attr("class", "links")
             .selectAll("line")
             .data(graph.links)
@@ -53,7 +73,8 @@ function setupSvg() {
                 return Math.sqrt(d.value);
             });
 
-        var node = svg.append("g")
+
+        var node = container.append("g")
             .attr("class", "nodes")
             .selectAll("circle")
             .data(graph.nodes)
@@ -75,7 +96,9 @@ function setupSvg() {
             .style("stroke-opacity", 0.75)
             .style("stroke", "white")
             .style("font-size", "8px")
-            .text(function (d) {return d.id})
+            .text(function(d) {
+                return d.id
+            })
             .style("pointer-events", "none")
 
 
@@ -90,6 +113,7 @@ function setupSvg() {
 
         simulation.force("link")
             .links(graph.links);
+
 
         function ticked() {
             link
@@ -115,6 +139,11 @@ function setupSvg() {
                 });
         }
     });
+
+
+    function zoomed() {
+        container.attr("transform", d3.event.transform);
+    }
 
     function dragstarted(d) {
         if (!d3.event.active) simulation.alphaTarget(0.3).restart();
