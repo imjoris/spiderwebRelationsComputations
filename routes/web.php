@@ -26,3 +26,19 @@ Route::group(array('prefix' => 'api'), function() {
   });
   Route::resource('nodes', 'NodesController');
 });
+
+
+Route::get('/json/{jsonfile}', function($filename) { 
+    $path = storage_path() . "/json/${filename}.json"; // ie: /var/www/laravel/app/storage/json/filename.json
+    if (!File::exists($path)) {
+        throw new Exception("Invalid File");
+    }
+    $file = File::get($path); // string
+    return $file;
+
+});
+
+/* Route::get('/json/{jsonfile}', array( */
+/*     'as' => 'load-json', */
+/*     'uses' => 'JSONController@loadJSON' */
+/* )); */

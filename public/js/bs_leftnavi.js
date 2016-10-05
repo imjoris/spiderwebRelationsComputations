@@ -12,6 +12,7 @@ $(document).ready(function () {
                 checkElement.addClass('active');
                 $('.gw-nav').find('li').find('ul:visible').slideUp();
                 return;
+                // .find('li').find('ul:visible').slideUp();
             }
             if (ulDom.style.display != 'block') {
                 gw_nav.find('li').find('ul:visible').slideUp();
