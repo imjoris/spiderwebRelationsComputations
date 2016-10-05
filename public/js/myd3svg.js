@@ -1,15 +1,3 @@
-// 1 d3.select("body")
-//      .append("svg")
-//      .attr("width", 50)
-//      .attr("height", 50)
-//      .append("circle")
-//      .attr("cx", 25)
-//      .attr("cy", 25)
-//      .attr("r", 25)
-//      .style("fill", "purple");
-
-
-
 // var width = window.innerWidth - 320;
 // var height = window.innerHeight - 52;
 // var svg = d3.select("body")
@@ -24,12 +12,10 @@ function setupSvg() {
     var width = window.innerWidth - 320;
     var height = window.innerHeight - 52;
 
-
     // var zoom = d3.behavior.zoom()
     var zoom = d3.zoom()
         .scaleExtent([1, 10])
         .on("zoom", zoomed);
-
 
     var margin = {top: -5, right: -5, bottom: -5, left: -5};
     var svg = d3.select("body")
@@ -40,18 +26,6 @@ function setupSvg() {
         .call(zoom);
 
     var container = svg.append("g");
-
-
-
-
-//     var zoom = d3.zoom()
-//         .scaleExtent([1, 40])
-//         .translateExtent([
-//             [-100, -100],
-//             [width + 90, height + 100]
-//         ])
-//         .on("zoom", zoomed);
-
     var color = d3.scaleOrdinal(d3.schemeCategory20);
 
     var simulation = d3.forceSimulation()
@@ -64,48 +38,30 @@ function setupSvg() {
     d3.json("json/miserables", function(error, graph) {
         if (error) throw error;
 
-        var link = container.append("g")
-            .attr("class", "links")
-            .selectAll("line")
+        var link = container.selectAll(".link")
             .data(graph.links)
             .enter().append("line")
-            .attr("stroke-width", function(d) {
-                return Math.sqrt(d.value);
-            });
+            .attr("class", "link")
+            .style("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-
-        var node = container.append("g")
-            .attr("class", "nodes")
-            .selectAll("circle")
+        var gnodes = container.selectAll('g.gnode')
             .data(graph.nodes)
-            .enter().append("circle")
-            // .attr("r", 5)
-            .attr("fill", function(d) {
-                return color(d.group);
-            })
+            .enter()
+            .append('g')
+
+        var node = gnodes.append("circle")
+            .attr("class", "node")
+            .attr("r", 5)
+            .style("fill", function(d) { return color(d.group); })
             .call(d3.drag()
                 .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
+                    .on("drag", dragged)
+                    .on("end", dragended));
 
-
-        node.append("text")
-            .style("text-anchor", "middle")
-            .attr("y", 3)
-            .style("stroke-width", "1px")
-            .style("stroke-opacity", 0.75)
-            .style("stroke", "white")
-            .style("font-size", "8px")
-            .text(function(d) {
-                return d.id
-            })
-            .style("pointer-events", "none")
-
-
-        node.append("title")
-            .text(function(d) {
-                return d.id;
-            });
+        var labels = gnodes.append("svg:text")
+            .attr("x", 12)
+            .attr("dy", ".35em")
+            .text(function(d) { return d.id; });
 
         simulation
             .nodes(graph.nodes)
@@ -130,13 +86,9 @@ function setupSvg() {
                     return d.target.y;
                 });
 
-            node
-                .attr("cx", function(d) {
-                    return d.x;
-                })
-                .attr("cy", function(d) {
-                    return d.y;
-                });
+            gnodes.attr("transform", function(d) { 
+                return 'translate(' + [d.x, d.y] + ')'; 
+            });
         }
     });
 
