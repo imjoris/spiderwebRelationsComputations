@@ -15,9 +15,21 @@
   r: 5;
 }
 
+.node.fixed {
+    fill: #f00;
+}
 
-text {
+
+/* text { */
+.nodeLabel{
     /* fill: #000; */
     font: 10px sans-serif;
     pointer-events: none;
+}
+
+.hidden {
+    /* text-indent: 100%; */
+    /* white-space: nowrap; */
+    /* overflow: hidden; */
+    opacity: 0;
 }

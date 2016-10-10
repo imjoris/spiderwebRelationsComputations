@@ -2,7 +2,7 @@
     position: fixed;
     right: 320px;
     left: 0;
-    bottom: 0;
+    top: 0;
     height: 50 px;
     background-color: #F2F2F2;
 }
@@ -17,6 +17,7 @@
 
 .bottombar>ul>li {
     float: right;
+    width: 100px;
 }
 
 .bottombar>ul>li>a {

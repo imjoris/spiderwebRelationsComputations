@@ -1,10 +1,10 @@
 .miscspacetotoywith {
     content: '';
     width: 320px;
-    height: 52px;
+    height: 51px;
     position: fixed;
     right: 0;
-    bottom: 0;
+    top: 0;
     background-color: #113333;
     padding: 0;
     margin: 0;
@@ -15,9 +15,9 @@
     content: '';
     position: absolute;
     left: 0;
-    top: 0;
+    bottom: 0;
     right: 320 px;
-    bottom: 52 px;
+    top: 52 px;
     height: calc(100% - 52px);
     width: calc(100% - 320px);
     padding: 0;
