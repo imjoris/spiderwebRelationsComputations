@@ -214,7 +214,7 @@
 //     // simulation.nodes(simulation.nodes().push(newNode));
 // }
 
-var myGraph = new MyGraph(".main");
+myGraph = new MyGraph(".main");
 // myGraph.initializeGraph();
 $.getJSON("json/miserables").then(function (response) {
     // graph = response;

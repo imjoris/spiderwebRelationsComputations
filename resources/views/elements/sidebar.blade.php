@@ -25,7 +25,7 @@
                         
                         <li>
                             <label class="custom-control custom-checkbox">
-                                <input id="hideLabelsBox" type="checkbox" class="custom-control-input" onclick='hideLabels();'>
+                                <input id="hideLabelsBox" type="checkbox" class="custom-control-input" onclick='myGraph.hideLabels();'>
                                 <span class="custom-control-indicator"></span>
                                 <span class="custom-control-description">Hide labels</span>
                             </label>

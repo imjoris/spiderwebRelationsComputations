@@ -255,7 +255,7 @@ MyGraph.prototype = {
     },
 
     hideLabels: function() {
-        container.selectAll(".nodeLabel")
+        myself.container.selectAll(".nodeLabel")
             .style("opacity", function() {
                 return $('#hideLabelsBox').is(":checked") ? 0 : 1
             });
