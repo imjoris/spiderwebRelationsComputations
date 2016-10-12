@@ -65,8 +65,7 @@
 
     <script src="{{ URL::asset('js/bs_leftnavi.js') }}"></script>
     <script src="{{ URL::asset('js/sidebar.js') }}"></script>
-    <script src="{{ URL::asset('js/MyGraph2.js') }}"></script>
-    <script src="{{ URL::asset('js/myd3svg.js') }}"></script>
+    <script src="{{ URL::asset('js/MyGraph.js') }}"></script>
 
     <script src="{{ URL::asset('js/angular/graph/graphCtrl.js') }}"></script>
     <script src="{{ URL::asset('js/angular/graph/graphService.js') }}"></script>
