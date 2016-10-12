@@ -33,15 +33,21 @@ function MyGraph() {
     };
     this.svg = d3.select("body")
         .append("svg")
+        .attr("id", "svgid")
         .attr("width", this.width)
         .attr("height", this.height)
-        .attr("transform", "translate(" + this.margin.left + "," + this.margin.right + ")")
+        // .attr("transform", "translate(" + this.margin.left + "," + this.margin.right + ")")
         .on("click", this.svgMouseUp)
-        .call(this.zoom);
+        .call(this.zoom)
+        .on("dblclick.zoom", null);
+
+
+    // listen for resize
+    window.onresize = function(){myself.updateWindow(myself.svg);};
 
 
 
-    this.container = this.svg.append("g");
+    this.container = this.svg.append("svg:g").attr("id", "containergroup");
     this.color = d3.scaleOrdinal(d3.schemeCategory20);
 
 
@@ -95,11 +101,7 @@ MyGraph.prototype = {
             // .data(graph.nodes)
             // .data(nodes, function(d){return d.id})
             .data(nodes)
-            .attr("class", "node")
-            .call(d3.drag()
-                .on("start", this.dragstarted)
-                .on("drag", this.dragged)
-                .on("end", this.dragended));
+            .attr("transform", function(d){return "translate(" + d.x + "," + d.y + ")";})
 
         // gnodes.select("circle")
         // .attr("r", 5)
@@ -171,6 +173,7 @@ MyGraph.prototype = {
         // simulation.tick();
         // simulation.alpha(0);
         myself.simulation.alphaTarget(0.3).restart();
+        // myself.simulation.restart();
         // simulation.force.start();
     },
     // end of refreshGraph()
@@ -232,7 +235,25 @@ MyGraph.prototype = {
     // this.context.restore();
     // },
     zoomed: function() {
-        myself.container.attr("transform", d3.event.transform);
+        // myself.attr("transform", d3.event.transform);
+
+        // this.state.justScaleTransGraph = true;
+        // d3.select("." + this.consts.graphClass)
+        
+        // d3.select("#svgid")
+        // d3.select("#svgid")
+        // myself.container
+        // .attr("translate(" + d3.event.transform + ") scale(" + d3.event.scale + ")"); 
+        // .attr("transform", d3.event.transform);
+        //
+        
+        myself.container
+        .attr("transform", d3.event.transform)
+        //     .attr("transform", "translate(" + [myself.container.x , myself.container.y] + ")");
+            
+            // "translate(" + d3.event.transform + ") scale(" + d3.event.scale + ")"); 
+        // myself.container
+        //     .attr("transform", "translate(" + [myself.container.x , myself.container.y] + ")");
     },
 
     dragstarted: function(d) {
@@ -261,18 +282,72 @@ MyGraph.prototype = {
             });
     },
 
+
+    // Pass in the element and its pre-transform coords
+    getElementCoords: function(element, coords) {
+        var ctm = element.getCTM(),
+            x = ctm.e + coords.x * ctm.a + coords.y * ctm.c,
+            y = ctm.f + coords.x * ctm.b + coords.y * ctm.d;
+        return {
+            x: x,
+            y: y
+        };
+    },
+
+    correct: function(m) {
+        var $container = $("#containergroup");
+        var width = $container.width(),
+            height = $container.height(),
+            topOffset = $container.find(".position-handler.top").first().offset(),
+            bottomOffset = $container.find(".position-handler.bottom").first().offset()
+        scaleX = (bottomOffset.left - topOffset.left) / width || 1,
+            scaleY = (bottomOffset.top - topOffset.top) / height || 1;
+        return [m[0] / scaleX, m[1] / scaleY];
+    },
+
+
+    updateWindow: function(svg){
+        var docEl = document.documentElement,
+            bodyEl = document.getElementsByTagName('body')[0];
+        var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
+        var y = window.innerHeight|| docEl.clientHeight|| bodyEl.clientHeight;
+        svg.attr("width", x).attr("height", y);
+    },
+
     svgMouseUp: function(d) {
 
         // d3.event.stopPropagation();
-        var coordinates = [0, 0];
-        var coordinates = d3.mouse(this);
+        var coordinates = d3.mouse(myself.container.node());
+        // var coordinates = d3.mouse();
+        // coordinates = myself.correct(coordinates);
+        // var myX = coordinates.x;
+        // var myY = coordinates.y;
+        // var myPreX = coordinates[0];
+        // var myPreY = coordinates[1];
+        // var newCoords = myself.getElementCoords(myself.container, {x:myPreX, y:myPreY});
+        // var myX = newCoords.x;
+        // var myY = newCoords.y;
+
+        // var myX = coordinates[0];
+        // var myY = coordinates[1];
+
+        var myX = coordinates[0];
+        var myY = coordinates[1];
+
+        // var myX = d3.event.clientX;
+        // var myY = d3.event.clientY;
+        // var myX = window.pageXOffset + myX;
+        // var myY = window.pageYOffset + myY;
+        // var myX = window.pageXOffset +d3.event.pageX;
+        // var myY = window.pageYOffset + d3.event.pageY;
+
         var newNode = {
             "id": "New Node",
             "group": 3,
-            "x": coordinates[0],
-            "y": coordinates[1],
-            "fx": coordinates[0],
-            "fy": coordinates[1]
+            "x": myX,
+            "y": myY,
+            "fx": myX,
+            "fy": myY,
         };
         // alert("123\n" + JSON.stringify(this.graph));
         myself.graph.nodes.push(newNode);
