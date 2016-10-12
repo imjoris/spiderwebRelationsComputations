@@ -30,7 +30,7 @@ function MyGraph() {
         .attr("id", "svgid")
         .attr("width", this.width)
         .attr("height", this.height)
-        // .on("click", this.svgClick)
+        .on("click", this.svgClick)
         // .on("mouseup", this.svgMouseUp)
         // .on("mousemove", this.svgMouseMove)
         .call(this.zoom)
