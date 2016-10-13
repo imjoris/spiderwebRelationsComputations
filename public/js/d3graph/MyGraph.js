@@ -24,11 +24,21 @@ function MyGraph() {
         ENTER_KEY: 13,
     }
 
+    this.defaults = {
+        forceLinkDistance: 100,
+        forceChargeStrength: -50,
+        forceChargeDistanceMin: 20,
+        forceChargeDistanceMax: 800,
+
+        forceCollideMargin: 10,
+        forceCollideStrength: 0.9,
+    }
+
     this.width = window.innerWidth - 320;
     this.height = window.innerHeight - 52;
 
     this.zoom = d3.zoom()
-        .scaleExtent([1, 10])
+        .scaleExtent([-10, 20])
         .on("zoom", this.zoomed)
         .on("end", this.zoomEnd) // <---- added
 
@@ -62,11 +72,21 @@ function MyGraph() {
     myself.simulation = d3.forceSimulation()
         .stop()
         .force("link", d3.forceLink().id(function(d) {
-            return d.id;
-        }))
+                return d.id;
+            })
+            // .strength(function(l){
+            //     return 0.2;
+            // })
+            .distance(this.defaults.forceLinkDistance)
+        )
         .force("charge", d3.forceManyBody()
-            .distanceMin(10)
-            .distanceMax(this.height/2)
+            .strength(this.defaults.forceChargeStrength)
+            .distanceMin(this.defaults.forceChargeDistanceMin)
+            .distanceMax(this.defaults.forceChargeDistanceMax)
+        )
+        .force("collide", d3.forceCollide(10)
+            .strength(0.9)
+
         )
         .force("center", d3.forceCenter(this.width / 2, this.height / 2));
 
@@ -91,19 +111,19 @@ MyGraph.prototype = {
         var nodes = myself.graph.nodes;
 
         var link = myself.container.selectAll(".link")
-            .data(links, function(d){
+            .data(links, function(d) {
                 return d.source.id + '-' + d.target.id;
                 // return d;
             });
 
         link.enter().append("line")
             .attr("class", "link")
-            .style("stroke-width", function(d) {
-                return Math.sqrt(d.value);
-            });
+            // .style("stroke-width", function(d) {
+            //     return Math.sqrt(d.value);
+            // });
 
         var gnodes = this.container.selectAll('.node')
-            .data(nodes, function(d){
+            .data(nodes, function(d) {
                 return d.id + "-" + d.group;
                 // return d;
             });
@@ -113,11 +133,11 @@ MyGraph.prototype = {
             .attr("class", "node")
             .call(d3.drag()
                 .on("start", this.dragstarted)
-                    .on("drag", this.dragged)
-                    .on("end", this.dragended))
+                .on("drag", this.dragged)
+                .on("end", this.dragended))
 
         var node = newNodes.append("circle")
-        // .on("mousedown", myself.nodeMouseDown)
+            // .on("mousedown", myself.nodeMouseDown)
             .attr("class", "nodecircle")
             .on("click", myself.nodeClick)
             .on("mouseover", myself.nodeMouseOver)
@@ -338,7 +358,7 @@ MyGraph.prototype = {
     nodeClick: function(d) {
         if (d3.event.shiftKey) {
 
-            if(!$('#keepTheForceBox').is(":checked")){
+            if (!$('#keepTheForceBox').is(":checked")) {
                 myself.stopForce();
             }
             myself.state.mouseDownNode = d;
@@ -384,16 +404,16 @@ MyGraph.prototype = {
             // if (myself.state.selectedNode){
             //     alert(myself.state.selectedNode.id + "\n" + d.id);
             // }
-            if(myself.state.selectedNode != null && myself.state.selectedNode.id == d.id){
+            if (myself.state.selectedNode != null && myself.state.selectedNode.id == d.id) {
                 d3.select(".selectednode")
                     .attr("class", "nodecircle");
                 myself.state.selectedNode = null;
-            }else if(!myself.state.selectedNode){
+            } else if (!myself.state.selectedNode) {
                 d3.select(this).attr("class", "selectednode");
                 myself.state.selectedNode = d; //d3.select(this);
                 // updateSidebarInfo();
                 // }
-            }else {
+            } else {
                 d3.select(".selectednode")
                     .attr("class", "nodecircle");
                 d3.select(this).attr("class", "selectednode");
@@ -466,11 +486,11 @@ MyGraph.prototype = {
     //##################################################
     // {{{
 
-    svgKeyDown: function(d){
-        switch(d3.event.keyCode) {
+    svgKeyDown: function(d) {
+        switch (d3.event.keyCode) {
             case myself.consts.BACKSPACE_KEY:
             case myself.consts.DELETE_KEY:
-                if(myself.state.selectedNode){
+                if (myself.state.selectedNode) {
 
                     myself.stopForce();
                     myself.removeNodeById(myself.state.selectedNode.id);
@@ -485,8 +505,8 @@ MyGraph.prototype = {
                     // var nodesToRemove = new Array();
 
                     var mylinks = myself.graph.links;
-                    for(var i = 0; i < mylinks.length; i++) {
-                        if(mylinks[i].source.id == myself.state.selectedNode.id || mylinks[i].target.id == myself.state.selectedNode.id) {
+                    for (var i = 0; i < mylinks.length; i++) {
+                        if (mylinks[i].source.id == myself.state.selectedNode.id || mylinks[i].target.id == myself.state.selectedNode.id) {
                             // neighBorLinks.push(i);
                             // myself.graph.links.splice(i, 1);
                             myself.removeLinkBySrcTar(mylinks[i].source, mylinks[i].target);
@@ -500,15 +520,15 @@ MyGraph.prototype = {
 
                     // myself.graph.nodes.splice(myself.state.selectedNode);
 
-                    myself.container.selectAll(".node").data(myself.graph.nodes, function(d){
-                        return d.id + "-" + d.group;
-                        // return d;
-                    })
+                    myself.container.selectAll(".node").data(myself.graph.nodes, function(d) {
+                            return d.id + "-" + d.group;
+                            // return d;
+                        })
                         .exit()
                         .remove();
 
                     myself.container.selectAll(".link")
-                        .data(myself.graph.links, function(d){
+                        .data(myself.graph.links, function(d) {
                             return d.source.id + '-' + d.target.id;
                             // return d;
                         })
@@ -523,7 +543,7 @@ MyGraph.prototype = {
                         .attr("class", "nodecircle");
                     myself.state.selectedNode = null;
 
-                    if($('#keepTheForceBox').is(":checked")){
+                    if ($('#keepTheForceBox').is(":checked")) {
                         myself.startForce();
                     }
 
@@ -537,7 +557,7 @@ MyGraph.prototype = {
     },
 
 
-    removeNodeById: function(id){
+    removeNodeById: function(id) {
         myself.graph.nodes = myself.graph.nodes.filter(e => e.id !== id);
 
         // var mynodes = myself.graph.nodes;
@@ -548,10 +568,10 @@ MyGraph.prototype = {
         // }
     },
 
-    removeLinkBySrcTar: function(src, tar){
-        myself.graph.links = myself.graph.links.filter(e => ! (
-            (e.source == src && e.target == tar) 
-                || (e.source == tar && e.target == src)))
+    removeLinkBySrcTar: function(src, tar) {
+        myself.graph.links = myself.graph.links.filter(e => !(
+            (e.source == src && e.target == tar) ||
+            (e.source == tar && e.target == src)))
 
         // var mylinks = myself.graph.links;
         // for(var i = 0; i < mylinks.length; i++) {
@@ -578,7 +598,7 @@ MyGraph.prototype = {
     startForce: function() {
         myself.state.hasForce = true;
         myself.simulation.alphaTarget(0.3).restart();
-        $("#toggleForceId").text("Pauze");
+        $("#toggleForceId").text("Pause");
     },
 
     stopForce: function() {
@@ -607,3 +627,30 @@ myGraph = new MyGraph(".main");
 $.getJSON("json/miserables").then(function(response) {
     myGraph.setGraph(response);
 });
+
+// myForceLinkDistSlider.name="linkforceslide";
+// mySlider.min="0";
+// mySlider.max="150";
+// mySlider.step="5";
+// mySlider.value="40";
+// mySlider.tooltip="show";
+
+// mySlider = new Slider("#forceDistSliderDiv");
+// mySlider = new Slider("#forceDistSliderInput");
+    // , {
+// });
+
+
+var myForceLinkDistSlider = $("#forceDistSliderInput").slider();
+myForceLinkDistSlider.slider('setValue', myself.defaults.forceLinkDistance);
+$("#forceDistSliderDiv")
+    .on("change", function linkDistChanged(event, val) {
+        // var myForceLinkDistSlider = $("#forceDistSliderDiv");
+        // var myForceLinkDistSlider = $("#forceDistSliderDiv");
+        // var val = $("#forceDistSliderInput").getValue();
+
+        var val = myForceLinkDistSlider.slider('getValue');
+        // var val = $("#forceDistSliderDiv").bootstrapSlider('getValue');
+        myself.simulation.force("link").distance(val);
+        // myself.simulation.alphaTarget(0.3).restart();
+    });

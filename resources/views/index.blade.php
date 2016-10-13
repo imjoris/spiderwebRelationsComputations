@@ -22,6 +22,10 @@
             <link rel="stylesheet" type="text/css" href="{{ URL::asset('css/main.css') }}">
             <link rel="stylesheet" type="text/css" href="{{ URL::asset('css/myd3svg.css') }}">
 
+            <!-- <link rel="stylesheet" type="text/css" href="{{ URL::asset('') }}"> -->
+            <link rel="stylesheet" type="text/css" href="{{ URL::asset('dependencies/bootstrap-slider/bootstrap-slider.min.css') }}">
+            <link rel="stylesheet" type="text/css" href="{{ URL::asset('css/mysliderbar.css') }}">
+
             <!-- JS -->
             <script src="{{ URL::asset('js/d3-all/d3-hierarchy/build/d3-hierarchy.js') }}"></script>
             <script src="{{ URL::asset('js/d3-all/d3-scale/build/d3-scale.js') }}"></script>
@@ -68,7 +72,9 @@
             @include('elements/sidebar')
         </body>
 
+        <script src="{{ URL::asset('dependencies/bootstrap-slider/bootstrap-slider.min.js') }}"></script>
         <script src="{{ URL::asset('js/interface/bs_leftnavi.js') }}"></script>
+        <script src="{{ URL::asset('js/interface/sidebarOptionMenu.js') }}"></script>
         <script src="{{ URL::asset('js/d3graph/MyGraph.js') }}"></script>
 
         <!-- <script src="{{ URL::asset('js/angular/graph/graphCtrl.js') }}"></script> -->

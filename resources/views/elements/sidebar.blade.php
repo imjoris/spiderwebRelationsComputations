@@ -41,6 +41,23 @@
                             </label>
                             <!-- <a href="javascript:void(0)">Menu 1</a> -->
                         </li>
+
+                        <hr>
+
+                        Force link distance:
+                        <div id="forceDistSliderDiv">
+                            <input
+                             id="forceDistSliderInput"
+                             data-provide="slider"
+                             data-slider-min="0"
+                             data-slider-max="250"
+                             data-slider-step="5"
+                             data-slider-tooltip="show"
+                             >
+                        </div>
+
+            <!-- data-slider-ticks="[1, 2, 3]" -->
+            <!-- data-slider-ticks-labels='["short", "medium", "long"]' -->
                     </ul>
                 </li>
 
