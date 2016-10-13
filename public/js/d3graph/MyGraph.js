@@ -3,6 +3,7 @@
 //##################################################
 // {{{
 function MyGraph() {
+
     myself = this;
     this.graph = new Object();
     this.error = new Object();
@@ -16,6 +17,11 @@ function MyGraph() {
         mouseY: 0,
         alerted: false,
         hasClickedNode: false
+    }
+    this.consts = {
+        BACKSPACE_KEY: 8,
+        DELETE_KEY: 46,
+        ENTER_KEY: 13,
     }
 
     this.width = window.innerWidth - 320;
@@ -35,12 +41,12 @@ function MyGraph() {
         left: -5
     };
     this.svg = d3.select("body")
+        .on("keydown", this.svgKeyDown)
         .append("svg")
         .attr("id", "svgid")
         .attr("width", this.width)
         .attr("height", this.height)
         .on("click", this.svgClick)
-        .on("keydown", this.svgKeyDown)
         .on("mousemove", this.svgMouseMove)
         .call(this.zoom)
         .on("dblclick.zoom", null);
@@ -82,7 +88,10 @@ MyGraph.prototype = {
         var nodes = myself.graph.nodes;
 
         var link = myself.container.selectAll(".link")
-            .data(links);
+            .data(links, function(d){
+                return d.source.id + '-' + d.target.id;
+                // return d;
+            });
 
         link.enter().append("line")
             .attr("class", "link")
@@ -91,7 +100,10 @@ MyGraph.prototype = {
             });
 
         var gnodes = this.container.selectAll('.node')
-            .data(nodes)
+            .data(nodes, function(d){
+                return d.id + "-" + d.group;
+                // return d;
+            });
 
         var newNodes = gnodes.enter()
             .append('g')
@@ -107,11 +119,9 @@ MyGraph.prototype = {
             .on("click", myself.nodeClick)
             .on("mouseover", myself.nodeMouseOver)
             .on("mouseout", myself.nodeMouseOut)
-            .attr("r", 5)
             .style("fill", function(d) {
                 return myself.color(d.group);
             });
-
 
         var labels = newNodes.append("svg:text")
             .attr("class", "nodeLabel")
@@ -121,11 +131,17 @@ MyGraph.prototype = {
                 return d.id;
             });
 
+
         myself.simulation.nodes(nodes);
         myself.simulation.force("link").links(links);
         if (myself.state.hasForce) {
             myself.simulation.alphaTarget(0.3).restart();
         }
+
+        labels.exit().remove();
+        newNodes.exit().remove();
+        node.exit().remove();
+        link.exit().remove();
     },
     // }}} end of refreshGraph()
 
@@ -441,20 +457,96 @@ MyGraph.prototype = {
 
     svgKeyDown: function(d){
         switch(d3.event.keyCode) {
-            case consts.BACKSPACE_KEY:
-            case consts.DELETE_KEY:
+            case myself.consts.BACKSPACE_KEY:
+            case myself.consts.DELETE_KEY:
                 if(myself.state.selectedNode){
-                    myself.graph.nodes.splice(myself.state.selectedNode);
+
+                    myself.stopForce();
+                    myself.removeNodeById(myself.state.selectedNode.id);
+                    // var mynodes = myself.graph.nodes;
+                    // for(var i = 0; i < mynodes.length; i++) {
+                    //     if(mynodes[i] === myself.state.selectedNode) {
+                    //         myself.graph.nodes.splice(i, 1);
+                    //     }
+                    // }
+
+                    // var neighBorLinks = new Array();
+                    // var nodesToRemove = new Array();
+
+                    var mylinks = myself.graph.links;
+                    for(var i = 0; i < mylinks.length; i++) {
+                        if(mylinks[i].source.id == myself.state.selectedNode.id || mylinks[i].target.id == myself.state.selectedNode.id) {
+                            // neighBorLinks.push(i);
+                            // myself.graph.links.splice(i, 1);
+                            myself.removeLinkBySrcTar(mylinks[i].source, mylinks[i].target);
+                        }
+                    }
+
+
+
+                    // myself.simulation.nodes(myself.graph.nodes);
+                    // myself.simulation.force("link").links(myself.graph.links);
+
+                    // myself.graph.nodes.splice(myself.state.selectedNode);
+
+                    myself.container.selectAll(".node").data(myself.graph.nodes, function(d){
+                        return d.id + "-" + d.group;
+                        // return d;
+                    })
+                        .exit()
+                        .remove();
+
+                    myself.container.selectAll(".link")
+                        .data(myself.graph.links, function(d){
+                            return d.source.id + '-' + d.target.id;
+                            // return d;
+                        })
+                    .exit()
+                    .remove();
+
                     myself.refreshGraph();
                     myself.simulation.tick();
                     myself.ticked();
+
+                    d3.select(".selectednode")
+                        .attr("class", "nodecircle");
+                    myself.state.selectedNode = null;
+
+                    myself.startForce();
+                    // myself.graph.nodes.splice(myself.state.selectedNode);
+                    // myself.refreshGraph();
+                    // myself.simulation.tick();
+                    // myself.ticked();
                 }
                 break;
         }
     },
 
 
+    removeNodeById: function(id){
+        myself.graph.nodes = myself.graph.nodes.filter(e => e.id !== id);
 
+        // var mynodes = myself.graph.nodes;
+        // for(var i = 0; i < mynodes.length; i++) {
+        //     if(mynodes[i].id === id) {
+        //         myself.graph.nodes.splice(i, 1);
+        //     }
+        // }
+    },
+
+    removeLinkBySrcTar: function(src, tar){
+        myself.graph.links = myself.graph.links.filter(e => ! (
+            (e.source == src && e.target == tar) 
+                || (e.source == tar && e.target == src)))
+
+        // var mylinks = myself.graph.links;
+        // for(var i = 0; i < mylinks.length; i++) {
+        //     if((mylinks[i].source == src && mylinks[i].target == tar)
+        //         || (mylinks[i].source == tar && mylinks[i].target == src)) {
+        //         myself.graph.links.splice(i, 1);
+        //     }
+        // }
+    },
     // }}}
 
     //##################################################
