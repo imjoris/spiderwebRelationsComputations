@@ -20,10 +20,23 @@
     stroke-opacity: .8;
 }
 
-.nodes circle {
-  stroke: #fff;
-  stroke-width: 1.5px;
-  r: 5;
+.nodecircle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+    r: 8;
+}
+/* .nodes circle { */
+/*   stroke: #fff; */
+/*   stroke-width: 1.5px; */
+/*   r: 8; */
+/* } */
+
+.selectednode {
+    /* fill: green; */
+    opacity: 0.6;
+    r: 10;
+    stroke: blue;
+    stroke-width: 2px;
 }
 
 .node.fixed {

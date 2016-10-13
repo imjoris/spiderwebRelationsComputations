@@ -11,6 +11,7 @@ function MyGraph() {
         shiftNodeDrag: false,
         mouseDownNode: null,
         mouseOverNode: null,
+        selectedNode: null,
         mouseX: 0,
         mouseY: 0,
         alerted: false,
@@ -74,7 +75,7 @@ MyGraph.prototype = {
     //##################################################
     //# Draw the graph
     //##################################################
-    // {{{ 
+    // {{{
     refreshGraph: function() {
 
         var links = myself.graph.links;
@@ -102,6 +103,7 @@ MyGraph.prototype = {
 
         var node = newNodes.append("circle")
         // .on("mousedown", myself.nodeMouseDown)
+            .attr("class", "nodecircle")
             .on("click", myself.nodeClick)
             .on("mouseover", myself.nodeMouseOver)
             .on("mouseout", myself.nodeMouseOut)
@@ -130,7 +132,7 @@ MyGraph.prototype = {
     //##################################################
     //# Update nodes on each force tick
     //##################################################
-    // {{{ 
+    // {{{
     ticked: function() {
         myself.container.selectAll(".link")
             .attr("x1", function(d) {
@@ -351,7 +353,16 @@ MyGraph.prototype = {
                 myself.simulation.tick();
                 myself.ticked();
             }
+        } else {
+            if(myself.state.selectedNode){
+                myself.state.selectedNode
+                    .attr("class", "nodecircle");
+            } 
+            d3.select(this).attr("class", "selectednode");
+            myself.state.selectedNode = d3.select(this);
+            // updateSidebarInfo();
         }
+
     },
 
     nodeMouseOver: function(d) {
