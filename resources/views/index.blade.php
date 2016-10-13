@@ -67,9 +67,9 @@
     <script src="{{ URL::asset('js/sidebar.js') }}"></script>
     <script src="{{ URL::asset('js/MyGraph.js') }}"></script>
 
-    <script src="{{ URL::asset('js/angular/graph/graphCtrl.js') }}"></script>
-    <script src="{{ URL::asset('js/angular/graph/graphService.js') }}"></script>
-    <script src="{{ URL::asset('js/angular/app.js') }}"></script>
+    <!-- <script src="{{ URL::asset('js/angular/graph/graphCtrl.js') }}"></script> -->
+    <!-- <script src="{{ URL::asset('js/angular/graph/graphService.js') }}"></script> -->
+    <!-- <script src="{{ URL::asset('js/angular/app.js') }}"></script> -->
         <!-- <script src="{{ URL::asset('') }}"></script> -->
         <!-- <script src="{{ URL::asset('') }}"></script> -->
 

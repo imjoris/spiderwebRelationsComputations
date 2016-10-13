@@ -7,11 +7,12 @@ angular.module('graphCtrl', [])
     $scope.isPaused = false;
     $scope.pauseGraph = function() {
         $scope.isPaused = true;
-        Graph.stopForce();
+        myGraph.stopForce();
     }
     $scope.playGraph = function() {
         $scope.isPaused = false;
-        Graph.startForce();
+        myGraph.startForce();
+        // Graph.startForce();
     }
 
     // get all the comments first and bind it to the $scope.comments object
