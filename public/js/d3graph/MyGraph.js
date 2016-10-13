@@ -40,7 +40,7 @@ function MyGraph() {
         .attr("width", this.width)
         .attr("height", this.height)
         .on("click", this.svgClick)
-    // .on("keydown", this.svgKeyDown)
+        .on("keydown", this.svgKeyDown)
         .on("mousemove", this.svgMouseMove)
         .call(this.zoom)
         .on("dblclick.zoom", null);
@@ -354,13 +354,29 @@ MyGraph.prototype = {
                 myself.ticked();
             }
         } else {
-            if(myself.state.selectedNode){
-                myself.state.selectedNode
+            // if(myself.state.selectedNode){
+            //     myself.state.selectedNode
+            //         .attr("class", "nodecircle");
+            //     myself.state.selectedNode = null;
+            // }
+            // if (myself.state.selectedNode){
+            //     alert(myself.state.selectedNode.id + "\n" + d.id);
+            // }
+            if(myself.state.selectedNode != null && myself.state.selectedNode.id == d.id){
+                d3.select(".selectednode")
                     .attr("class", "nodecircle");
-            } 
-            d3.select(this).attr("class", "selectednode");
-            myself.state.selectedNode = d3.select(this);
-            // updateSidebarInfo();
+                myself.state.selectedNode = null;
+            }else if(!myself.state.selectedNode){
+                d3.select(this).attr("class", "selectednode");
+                myself.state.selectedNode = d; //d3.select(this);
+                // updateSidebarInfo();
+                // }
+            }else {
+                d3.select(".selectednode")
+                    .attr("class", "nodecircle");
+                d3.select(this).attr("class", "selectednode");
+                myself.state.selectedNode = d; //d3.select(this);
+            }
         }
 
     },
@@ -416,6 +432,29 @@ MyGraph.prototype = {
     // }}}
     //
     // end mouse functions
+    // }}}
+
+    //##################################################
+    //# Key events
+    //##################################################
+    // {{{
+
+    svgKeyDown: function(d){
+        switch(d3.event.keyCode) {
+            case consts.BACKSPACE_KEY:
+            case consts.DELETE_KEY:
+                if(myself.state.selectedNode){
+                    myself.graph.nodes.splice(myself.state.selectedNode);
+                    myself.refreshGraph();
+                    myself.simulation.tick();
+                    myself.ticked();
+                }
+                break;
+        }
+    },
+
+
+
     // }}}
 
     //##################################################
