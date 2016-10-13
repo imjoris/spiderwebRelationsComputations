@@ -22,7 +22,7 @@
                                 <span class="custom-control-description">Fix position on drag</span>
                             </label>
                         </li>
-                        
+
                         <li>
                             <label class="custom-control custom-checkbox">
                                 <input id="hideLabelsBox" type="checkbox" class="custom-control-input" onclick='myGraph.hideLabels();'>

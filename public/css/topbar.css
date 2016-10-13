@@ -1,4 +1,4 @@
-.bottombar {
+.topbar {
     position: fixed;
     right: 320px;
     left: 0;
@@ -7,7 +7,7 @@
     background-color: #F2F2F2;
 }
 
-.bottombar>ul {
+.topbar>ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
@@ -15,12 +15,12 @@
     background-color: #333333;
 }
 
-.bottombar>ul>li {
+.topbar>ul>li {
     float: right;
     width: 100px;
 }
 
-.bottombar>ul>li>a {
+.topbar>ul>li>a {
     display: block;
     color: white;
     text-align: center;
@@ -28,7 +28,7 @@
     text-decoration: none;
 }
 
-.bottombar>ul>li>a:hover {
+.topbar>ul>li>a:hover {
     background-color: #111111;
 }
 

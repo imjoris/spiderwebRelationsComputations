@@ -1,4 +1,7 @@
-// function MyGraph(el, startNodes, startEdges) {
+//##################################################
+//# Initialization of MyGraph
+//##################################################
+// {{{
 function MyGraph() {
     myself = this;
     this.graph = new Object();
@@ -36,7 +39,7 @@ function MyGraph() {
         .attr("width", this.width)
         .attr("height", this.height)
         .on("click", this.svgClick)
-        // .on("keydown", this.svgKeyDown)
+    // .on("keydown", this.svgKeyDown)
         .on("mousemove", this.svgMouseMove)
         .call(this.zoom)
         .on("dblclick.zoom", null);
@@ -64,14 +67,15 @@ function MyGraph() {
         .attr("id", "draglineid")
         .attr("class", "hiddendragline");
 }
+// }}} end of initialiization
 
 MyGraph.prototype = {
 
     //##################################################
     //# Draw the graph
     //##################################################
+    // {{{ 
     refreshGraph: function() {
-        // {{{
 
         var links = myself.graph.links;
         var nodes = myself.graph.nodes;
@@ -93,11 +97,11 @@ MyGraph.prototype = {
             .attr("class", "node")
             .call(d3.drag()
                 .on("start", this.dragstarted)
-                .on("drag", this.dragged)
-                .on("end", this.dragended))
+                    .on("drag", this.dragged)
+                    .on("end", this.dragended))
 
         var node = newNodes.append("circle")
-            // .on("mousedown", myself.nodeMouseDown)
+        // .on("mousedown", myself.nodeMouseDown)
             .on("click", myself.nodeClick)
             .on("mouseover", myself.nodeMouseOver)
             .on("mouseout", myself.nodeMouseOut)
@@ -121,10 +125,12 @@ MyGraph.prototype = {
             myself.simulation.alphaTarget(0.3).restart();
         }
     },
-    // end of refreshGraph()
-    // }}}
+    // }}} end of refreshGraph()
 
-
+    //##################################################
+    //# Update nodes on each force tick
+    //##################################################
+    // {{{ 
     ticked: function() {
         myself.container.selectAll(".link")
             .attr("x1", function(d) {
@@ -140,38 +146,21 @@ MyGraph.prototype = {
                 return d.target.y;
             });
 
-        // if(myself.state.hasForce){
         myself.container.selectAll('.node')
             .attr("transform", function(d) {
                 var nX = d.fx ? d.fx : d.x;
                 var nY = d.fy ? d.fy : d.y;
                 return 'translate(' + [nX, nY] + ')';
             });
-        // } else {
-        //     myself.container.select('#mouseoverid')
-        //         .attr("transform", function(d) {
-        //             var nX = d.fx ? d.fx : d.x;
-        //             var nY = d.fy ? d.fy : d.y;
-        //             return 'translate(' + [nX, nY] + ')';
-        //         });
-        // }
-
-        // var myX = myself.state.mouseX;
-        // var myY = myself.state.mouseY;
-
         myself.updateDragLine();
     },
+    // }}}  end of ticked
 
-    zoomed: function() {
-        myself.container
-            .attr("transform", d3.event.transform)
-    },
-
-    zoomEnd: function() {
-        // alert('mouseup');
-        // if( d3.event.type == 'end' )
-    },
-
+    //##################################################
+    //# Update the line to connect nodes
+    //# Make it follow the pointer position
+    //##################################################
+    // {{{
     updateDragLine: function() {
         if (myself.state.shiftNodeDrag) {
             var myX = 0;
@@ -183,19 +172,12 @@ MyGraph.prototype = {
             } catch (err) {
                 return;
             }
-            // alert(coordinates[0] + "\n" + coordinates[1]);
-            // myself.state.mouseX = coordinates[0];
-            // myself.state.mouseY = coordinates[1];
 
             var myX = coordinates[0];
             var myY = coordinates[1];
 
-            // var myX = myself.state.mouseX;
-            // var myY = myself.state.mouseY;
-
             myself.dragline.attr("class", "dragline");
             dnode = myself.state.mouseDownNode;
-            // alert(JSON.stringify(dnode));
             myself.dragline
                 .attr("x1", function() {
                     if (dnode.fx) {
@@ -219,7 +201,39 @@ MyGraph.prototype = {
             myself.dragline.attr("class", "hiddendragline");
         }
     },
+    // }}}
 
+    //##################################################
+    //# Update the window on a resize
+    //##################################################
+    // {{{
+    updateWindow: function(svg) {
+        var docEl = document.documentElement,
+            bodyEl = document.getElementsByTagName('body')[0];
+        var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
+        var y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
+        svg.attr("width", x).attr("height", y);
+    },
+    // }}}
+
+    //##################################################
+    //# Zoom event listeners
+    //##################################################
+    // {{{
+    zoomed: function() {
+        myself.container
+            .attr("transform", d3.event.transform)
+    },
+
+    zoomEnd: function() {
+        // alert('mouseup');
+    },
+    // }}}
+
+    //##################################################
+    //# Drag event listeners
+    //##################################################
+    // {{{
     dragstarted: function(d) {
         if (!myself.state.shiftNodeDrag) {
             if (myself.state.hasForce) {
@@ -232,7 +246,6 @@ MyGraph.prototype = {
 
 
     dragged: function(d) {
-        // myself.container.select('')
         if (!myself.state.shiftNodeDrag) {
             var coordinates = new Array();
             try {
@@ -241,28 +254,15 @@ MyGraph.prototype = {
                 d.fy = coordinates[1];
                 myself.simulation.tick();
                 myself.ticked();
-                // .attr("id", "mouseoverid")
-                // .attr("transform", function(d) {
-                //     var nX = d.fx ? d.fx : d.x;
-                //     var nY = d.fy ? d.fy : d.y;
-                //     return 'translate(' + [nX, nY] + ')';
-                // });
             } catch (e) {
                 return;
             }
-
-            // d.fx = d3.event.x;
-            // d.fy = d3.event.y;
         } else {
             myself.updateDragLine();
         }
     },
 
     dragended: function(d) {
-        // if (myself.state.shiftNodeDrag) {
-        //     myself.state.shiftNodeDrag = false;
-        //     myself.dragline.attr("class", "hiddendragline");
-        // }
         if (!myself.state.shiftNodeDrag) {
             if (myself.state.hasForce) {
                 if (!$('#fixOnDragBox').is(":checked")) {
@@ -274,27 +274,44 @@ MyGraph.prototype = {
         }
     },
 
-    hideLabels: function() {
-        myself.container.selectAll(".nodeLabel")
-            .style("opacity", function() {
-                return $('#hideLabelsBox').is(":checked") ? 0 : 1
-            });
-    },
+    // }}} end drag event listeners
 
+    //##################################################
+    //# Mouse
+    //##################################################
+    // {{{
 
-    updateWindow: function(svg) {
-        var docEl = document.documentElement,
-            bodyEl = document.getElementsByTagName('body')[0];
-        var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
-        var y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
-        svg.attr("width", x).attr("height", y);
+    //##################################################
+    //# General function to get the mouse coordinates
+    //##################################################
+    // {{{
+    getMouseCoordinates: function() {
+        var coordinates = new Array();
+        try {
+            coordinates = d3.mouse(myself.container.node());
+        } catch (err) {
+            if (d3.event) {
+                coordinates = [d3.event.x, d3.event.y];
+            } else {
+                return;
+            }
+        }
+        myself.state.mouseX = coordinates[0];
+        myself.state.mouseY = coordinates[1];
+
+        return coordinates;
     },
+    // }}}
+
+    //##################################################
+    //# Node mouse event listeners
+    //##################################################
+    // {{{
 
     // nodeMouseDown: function(d) {
     //     if (d3.event.shiftKey) {
     //         myself.state.shiftNodeDrag = true;
     //     }
-
     // },
 
     nodeClick: function(d) {
@@ -316,10 +333,6 @@ MyGraph.prototype = {
                     var alink = myself.graph.links[i];
                     alinkSrcId = alink.source.id;
                     alinkTarId = alink.target.id;
-                    // if(!myself.state.alerted){
-                    //     alert(alinkSrcId + "\n" + alinkTarId);
-                    //     myself.state.alerted = true;
-                    // }
                     if ((alinkSrcId === newLink.target && alinkTarId === newLink.source) || (alinkSrcId === newLink.source && alinkTarId === newLink.target)) {
                         alert("link already exists");
                         myself.state.mouseDownNode = d;
@@ -337,46 +350,9 @@ MyGraph.prototype = {
                 myself.refreshGraph();
                 myself.simulation.tick();
                 myself.ticked();
-
-
-                // var sIndex;
-                // var tIndex;
-                // for (var i = 0; i < myself.graph.nodes.length; i++){
-                //     var curnode = myself.graph.nodes[i];
-                //     if(curnode === myself.state.mouseDownNode){
-                //         sIndex = i;
-                //     }
-                //     if(curnode === d){
-                //         tIndex = i;
-                //     }
-                // }
-                // myself.graph.nodes.splice(sIndex, 1);
-                // myself.graph.nodes.splice(tIndex, 1);
-                // d3.selectAll(".node").data(myself.graph.nodes);
-
-                // myself.graph.nodes.push(d);
-                // myself.graph.nodes.push(myself.state.mouseDownNode);
             }
         }
-
-        // if (myself.state.mouseDownNode) {
-        //     var newLink = {
-        //         "source": myself.state.mouseDownNode.id,
-        //         "target": d.id
-        //     }
-        //     myself.graph.links.push(newLink);
-        //     myself.refreshGraph();
-        // }
-        // myself.state.shiftNodeDrag = false;
-        // myself.dragline.attr("class", "hiddendragline");
-        // myself.state.mouseDownNode = null;
     },
-
-    // d3.selection.prototype.moveToFront = function() {
-    //     return this.each(function(){
-    //         this.parentNode.appendChild(this);
-    //     });
-    // };
 
     nodeMouseOver: function(d) {
         myself.state.mouseOverNode = d;
@@ -384,33 +360,18 @@ MyGraph.prototype = {
     nodeMouseOut: function(d) {
         myself.state.mouseOverNode = null;
     },
+    // end node mouse event listeners
+    // }}}
 
-    getMouseCoordinates: function() {
-        var coordinates = new Array();
-        try {
-            coordinates = d3.mouse(myself.container.node());
-        } catch (err) {
-            if (d3.event) {
-                coordinates = [d3.event.x, d3.event.y];
-            } else {
-                return;
-            }
-        }
-        myself.state.mouseX = coordinates[0];
-        myself.state.mouseY = coordinates[1];
-
-        return coordinates;
-    },
-
+    //##################################################
+    //# SVG mouse event listeners
+    //##################################################
+    // {{{
     svgMouseMove: function(d) {
         if (myself.state.shiftNodeDrag) {
             myself.updateDragLine();
         }
     },
-
-    //     svgKeyDown: function(d) {
-
-    //     },
 
     svgClick: function(d) {
         if (!myself.state.shiftNodeDrag) {
@@ -427,7 +388,6 @@ MyGraph.prototype = {
                     "fx": myX,
                     "fy": myY,
                 };
-                // alert("123\n" + JSON.stringify(this.graph));
                 myself.graph.nodes.push(newNode);
                 myself.refreshGraph();
                 myself.simulation.tick();
@@ -441,19 +401,26 @@ MyGraph.prototype = {
         }
 
     },
+    // end svg mouse event listeners
+    // }}}
+    //
+    // end mouse functions
+    // }}}
 
+    //##################################################
+    //# Public functions used by the interface
+    //##################################################
+    // {{{
     setGraph: function(newGraph) {
         myself.graph = newGraph;
         myself.simulation.nodes(myself.graph.nodes);
         myself.simulation.force("link").links(myself.graph.links);
 
-        // alert("123\n" + JSON.stringify(graph));
         myself.refreshGraph();
     },
 
     startForce: function() {
         myself.state.hasForce = true;
-        // myself.simulation.restart();
         myself.simulation.alphaTarget(0.3).restart();
         $("#toggleForceId").text("Pauze");
     },
@@ -463,9 +430,16 @@ MyGraph.prototype = {
         hasForce = false;
         myself.simulation.stop();
         $("#toggleForceId").text("Play");
-        // myself.simulation.alphaTarget(0);
-        // myself.simulation.alpha(0);
-    }
+    },
+
+    hideLabels: function() {
+        myself.container.selectAll(".nodeLabel")
+            .style("opacity", function() {
+                return $('#hideLabelsBox').is(":checked") ? 0 : 1
+            });
+    },
+    // end public functions
+    // }}}
 
 }
 

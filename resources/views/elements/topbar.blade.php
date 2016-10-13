@@ -1,6 +1,6 @@
             <!-- id -->
             <!-- <div class="bottombar" ng-app="graphApp" ng-controller="graphController"> -->
-            <div class="bottombar">
+            <div class="topbar">
             <!-- <div class="navbar-header"> -->
             <!--     <a class="navbar-brand" href="#">Lively Spiderweb</a> -->
             <!-- </div> -->
