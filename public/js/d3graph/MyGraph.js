@@ -64,7 +64,10 @@ function MyGraph() {
         .force("link", d3.forceLink().id(function(d) {
             return d.id;
         }))
-        .force("charge", d3.forceManyBody())
+        .force("charge", d3.forceManyBody()
+            .distanceMin(10)
+            .distanceMax(this.height/2)
+        )
         .force("center", d3.forceCenter(this.width / 2, this.height / 2));
 
     myself.simulation
@@ -334,7 +337,10 @@ MyGraph.prototype = {
 
     nodeClick: function(d) {
         if (d3.event.shiftKey) {
-            myself.stopForce();
+
+            if(!$('#keepTheForceBox').is(":checked")){
+                myself.stopForce();
+            }
             myself.state.mouseDownNode = d;
             myself.state.shiftNodeDrag = true;
             myself.updateDragLine();
@@ -442,6 +448,11 @@ MyGraph.prototype = {
                 myself.updateDragLine();
             }
         }
+        if (myself.state.selectedNode !== null && myself.state.mouseOverNode === null) {
+            d3.select(".selectednode")
+                .attr("class", "nodecircle");
+            myself.state.selectedNode = null;
+        }
 
     },
     // end svg mouse event listeners
@@ -501,8 +512,8 @@ MyGraph.prototype = {
                             return d.source.id + '-' + d.target.id;
                             // return d;
                         })
-                    .exit()
-                    .remove();
+                        .exit()
+                        .remove();
 
                     myself.refreshGraph();
                     myself.simulation.tick();
@@ -512,7 +523,10 @@ MyGraph.prototype = {
                         .attr("class", "nodecircle");
                     myself.state.selectedNode = null;
 
-                    myself.startForce();
+                    if($('#keepTheForceBox').is(":checked")){
+                        myself.startForce();
+                    }
+
                     // myself.graph.nodes.splice(myself.state.selectedNode);
                     // myself.refreshGraph();
                     // myself.simulation.tick();

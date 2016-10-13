@@ -31,6 +31,16 @@
                             </label>
                             <!-- <a href="javascript:void(0)">Menu 1</a> -->
                         </li>
+
+
+                        <li>
+                            <label class="custom-control custom-checkbox">
+                                <input id="keepTheForceBox" type="checkbox" class="custom-control-input" >
+                                <span class="custom-control-indicator"></span>
+                                <span class="custom-control-description">Don't pause when editing</span>
+                            </label>
+                            <!-- <a href="javascript:void(0)">Menu 1</a> -->
+                        </li>
                     </ul>
                 </li>
 
