@@ -1,9 +1,23 @@
-#forceDistSliderDiv {
-    width: 80%;
-    /* padding-left:20px; */
-    /* padding-right:20px; */
+.myslider {
     margin: auto;
+    /* width: 50%; */
     border: 3px solid green;
-    padding: 10px;
+    padding: 3px;
 
 }
+.myslider>label {
+    float:right;
+    margin-right:30px;
+}
+
+/* #forceDistSliderDiv { */
+/*     width: 80%; */
+/*     /1* padding-left:20px; *1/ */
+/*     /1* padding-right:20px; *1/ */
+/*     margin: auto; */
+/*     border: 3px solid green; */
+/*     padding: 10px; */
+
+/* } */
+
+

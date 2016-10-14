@@ -30,7 +30,7 @@ function MyGraph() {
         forceChargeDistanceMin: 20,
         forceChargeDistanceMax: 800,
 
-        forceCollideMargin: 10,
+        forceCollideRadius: 10,
         forceCollideStrength: 0.9,
     }
 
@@ -641,16 +641,79 @@ $.getJSON("json/miserables").then(function(response) {
 // });
 
 
-var myForceLinkDistSlider = $("#forceDistSliderInput").slider();
-myForceLinkDistSlider.slider('setValue', myself.defaults.forceLinkDistance);
-$("#forceDistSliderDiv")
-    .on("change", function linkDistChanged(event, val) {
-        // var myForceLinkDistSlider = $("#forceDistSliderDiv");
-        // var myForceLinkDistSlider = $("#forceDistSliderDiv");
-        // var val = $("#forceDistSliderInput").getValue();
+// var myForceLinkDistSlider = $(document.getElementById("sliderInput:forceLinkDist")).slider();
+// myForceLinkDistSlider.slider('setValue', myself.defaults.forceLinkDistance);
+// $(document.getElementById("sliderLabel:forceLinkDist")).text(myForceLinkDistSlider.slider('getValue'));
+// $(document.getElementById("sliderDiv:forceLinkDist"))
+//     .on("change", function linkDistChanged(event, val) {
+//         var val = myForceLinkDistSlider.slider('getValue');
+//         $(document.getElementById("sliderLabel:forceLinkDist")).text(val);
+//         myself.simulation.force("link").distance(val);
+//     });
 
-        var val = myForceLinkDistSlider.slider('getValue');
-        // var val = $("#forceDistSliderDiv").bootstrapSlider('getValue');
-        myself.simulation.force("link").distance(val);
-        // myself.simulation.alphaTarget(0.3).restart();
+// function initSliders(){
+    addSlider("forceLinkDist", myGraph.defaults.forceLinkDistance, function(val){
+        myGraph.simulation.force("link").distance(val);
     });
+
+
+
+addSlider("forceChargeDistanceMin", myself.defaults.forceChargeDistanceMin, function(val){
+    myself.simulation.force("charge").distanceMin(val);
+});
+addSlider("forceChargeDistanceMax", myself.defaults.forceChargeDistanceMax, function(val){
+    myself.simulation.force("charge").distanceMax(val);
+});
+
+addSlider("forceChargeStrength", myself.defaults.forceChargeStrength, function(val){
+            myself.simulation.force("charge").strength(val);
+});
+
+addSlider("forceCollideRadius", myself.defaults.forceCollideRadius, function(val){
+    myGraph.simulation.force("collide").radius(val);
+});
+
+addSlider("forceCollideStrength", myself.defaults.forceCollideStrength, function(val){
+    myGraph.simulation.force("collide").strength(val);
+});
+//     forceCollideStrength: 0.9,
+
+// addSlider("forceChargeDistanceMin", myself.defaults.forceChargeDistanceMin, function(val){
+//     myself.simulation.force("charge").distanceMin(val);
+// })
+// addSlider("forceChargeDistanceMax", myself.defaults.forceChargeDistanceMax, function(val){
+//     myself.simulation.force("charge").distanceMax(val);
+// })
+// addSlider("", myself.defaults.forceChargeDistanceMax, function(val){
+//     myself.simulation.force("charge").distanceMax(val);
+// })
+
+
+
+        // forceCollideMargin: 10,
+        // forceCollideStrength: 0.9,
+
+
+function addSlider(IdSuffix, defaultVal, valueCallBack){
+    var sl = $(document.getElementById("sliderInput:" + IdSuffix)).slider();
+    sl.slider('setValue', defaultVal);
+    $(document.getElementById("sliderLabel:" + IdSuffix)).text(sl.slider('getValue'));
+    $(document.getElementById("sliderDiv:" + IdSuffix))
+        .on("change", function slChange(event, val) {
+            var val = sl.slider('getValue');
+            $(document.getElementById("sliderLabel:" + IdSuffix)).text(val);
+            valueCallBack(val);
+        });
+
+}
+
+
+// var myForceChargeStrengthSlider = $(document.getElementById("sliderInput:forceChargeStrength")).slider();
+// myForceChargeStrengthSlider.slider('setValue', myself.defaults.forceChargeStrength);
+// $(document.getElementById("sliderLabel:forceChargeStrength")).text(myForceChargeStrengthSlider.slider('getValue'));
+// $(document.getElementById("sliderDiv:forceChargeStrength"))
+//     .on("change", function chargeStrengthChanged(event, val) {
+//         var val = myForceChargeStrengthSlider.slider('getValue');
+//         $(document.getElementById("sliderLabel:forceChargeStrength")).text(val);
+//         myself.simulation.force("charge").strength(val);
+//     });

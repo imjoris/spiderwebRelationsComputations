@@ -62,6 +62,7 @@
         </head>
 
         <body class="main">
+        <!-- <body class="main" onload="initSliders"> -->
             <!-- ################################################## -->
             <!-- # Empty square in the corner -->
             <!-- # where the sidebar and topbar meet upper right corner -->
