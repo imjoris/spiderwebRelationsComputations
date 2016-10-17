@@ -61,7 +61,8 @@
 
         </head>
 
-        <body class="main">
+        <body id="bodyId" class="main">
+            <div id="svgDiv" width="100%" height="100%"></div>
         <!-- <body class="main" onload="initSliders"> -->
             <!-- ################################################## -->
             <!-- # Empty square in the corner -->

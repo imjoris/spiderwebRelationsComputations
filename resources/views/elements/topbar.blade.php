@@ -10,8 +10,27 @@
                     <!-- <a ng-click="playGraph()" ng-show="isPaused" href="#">Play</a> -->
                     <!-- <a ng-click="pauseGraph()" ng-hide="isPaused" href="#">Pause</a> -->
                 </li>
-                <li><a href="#">Page 1</a></li>
-                <li><a href="#">Page 2</a></li>
+                <li>
+                    <a id="downloadGraphId" onClick="onClickExportJson()" href="#">Export</a>
+                </li>
+                <li>
+                    <!-- <a onClick="onClickInport()" href="#">Inport</a> -->
+
+
+                    <a href="#" id="fakeUpload"><span>Find File</span></a>
+                    <input type="file" id="upload" /><br />
+
+                    <!-- <a href="#" onclick="performClick('#fileInputId');">Open file dialog</a> -->
+                    <!-- <input style="visibility:hidden; width: 0; height:0" type="file" id="fileInputId" /> -->
+                    <!-- <form id="uploader-form" action="http://hotblocks.nl/_http_server.php"> -->
+                    <!--     <label for="fileinput" id="link" class="trigger-file-input">Link Label</label> -->
+                    <!--     <br /> -->
+                    <!--     <label for="fileinput" id="button" class="trigger-file-input">Button Label</label> -->
+                    <!--     <input type="file" id="fileinput" /> -->
+                    <!-- </form> -->
+                <!-- </li> -->
+
+
                 <li><a href="#">Page 3</a></li>
             </ul>
 
