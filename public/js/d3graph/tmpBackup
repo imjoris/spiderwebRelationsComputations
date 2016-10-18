@@ -4,7 +4,7 @@
 //##################################################
 // {{{
 function MyGraph() {
-    var self = this;
+    myself = this;
     this.maxId = 0;
     this.graph = {
         "nodes": [],
@@ -40,576 +40,23 @@ function MyGraph() {
             k: 1,
             x: 0,
             y: 0
-        },
+        }
     };
     this.width = window.innerWidth - 320;
     this.height = window.innerHeight - 52;
 
-
-    //##################################################
-    //# Draw the graph
-    //##################################################
-    // {{{
-    this.refreshGraph = function() {
-        var links = this.graph.links;
-        var nodes = this.graph.nodes;
-
-        var link = this.containerLinks.selectAll(".link")
-            .data(links, function(d) {
-                return d.source.id + '-' + d.target.id;
-                // return d;
-            });
-
-        link.enter()
-            .append("line")
-            .attr("class", "link")
-            .attr("data-src", function(d) {
-                return d.source.id
-            })
-            .attr("data-tar", function(d) {
-                return d.target.id
-            })
-
-        // .style("stroke-width", function(d) {
-        //     return Math.sqrt(d.value);
-        // });
-
-        var gnodes = this.containerNodes.selectAll('.node')
-            .data(nodes, function(d) {
-                // return d.id + "-" + d.group;
-                return d.id;
-                // return d;
-            });
-
-        var newNodes = gnodes.enter()
-            .append('g')
-            .attr("class", "node")
-            .call(d3.drag()
-                .on("start", this.dragstarted)
-                .on("drag", this.dragged)
-                .on("end", this.dragended));
-
-        var node = newNodes.append("circle")
-            // .on("mousedown", this.nodeMouseDown)
-            // .on("mouseup", this.nodeMouseUp)
-            .on("click", this.nodeClick)
-            .on("mouseover", this.nodeMouseOver)
-            .on("mouseout", this.nodeMouseOut)
-            .attr("class", "nodecircle")
-            .style("fill", function(d) {
-                return self.color(d.group);
-            });
-
-        var labels = newNodes.append("svg:text")
-            .attr("class", "nodeLabel")
-            .attr("x", 7)
-            .attr("dy", ".35em")
-            .text(function(d) {
-                return d.name;
-            });
-
-
-        this.simulation.nodes(nodes);
-        this.simulation.force("link").links(links);
-        if (this.state.hasForce) {
-            this.simulation.alphaTarget(0.3).restart();
-        }
-
-        labels.exit().remove();
-        newNodes.exit().remove();
-        node.exit().remove();
-        link.exit().remove();
-    };
-    // }}} end of refreshGraph()
-
-    //##################################################
-    //# Update nodes on each force tick
-    //##################################################
-    // {{{
-    this.ticked = function() {
-        self.containerLinks.selectAll(".link")
-            .attr("x1", function(d) {
-                return d.source.x;
-            })
-            .attr("y1", function(d) {
-                return d.source.y;
-            })
-            .attr("x2", function(d) {
-                return d.target.x;
-            })
-            .attr("y2", function(d) {
-                return d.target.y;
-            });
-
-        self.containerNodes.selectAll('.node')
-            .attr("transform", function(d) {
-                var nX = d.fx ? d.fx : d.x;
-                var nY = d.fy ? d.fy : d.y;
-                return 'translate(' + [nX, nY] + ')';
-            });
-        // .attr("x", function(d){return d.x})
-        // .attr("y", function(d){return d.y});
-        self.updateDragLine();
-    };
-    // }}}  end of ticked
-
-    //##################################################
-    //# Update the line to connect nodes
-    //# Make it follow the pointer position
-    //##################################################
-    // {{{
-    self.updateDragLine = function() {
-        if (self.state.shiftNodeDrag) {
-            var myX = 0;
-            var myY = 0;
-            try {
-                var coordinates = self.getMouseCoordinates();
-                var myX = coordinates[0];
-                var myY = coordinates[1];
-            } catch (err) {
-                return;
-            }
-
-            var myX = coordinates[0];
-            var myY = coordinates[1];
-
-            self.dragline.attr("class", "dragline");
-            var dnode = self.state.mouseDownNode;
-            self.dragline
-                .attr("x1", function() {
-                    if (dnode.fx) {
-                        return dnode.fx
-                    }
-                    return dnode.x;
-                })
-                .attr("y1", function(d) {
-                    if (dnode.fy) {
-                        return dnode.fy;
-                    }
-                    return dnode.y
-                })
-                .attr("x2", myX)
-                .attr("y2", myY)
-                .attr("opacity", 1)
-                .attr("stroke-opacity", 1)
-                .attr("stroke-width", 6);
-
-        } else {
-            self.dragline.attr("class", "hiddendragline");
-        }
-    };
-    // }}}
-
-    //##################################################
-    //# SVG mouse event listeners
-    //##################################################
-    // {{{
-    this.svgMouseMove = function(d) {
-        if (self.state.shiftNodeDrag) {
-            self.updateDragLine();
-        }
-    };
-
-    this.svgClick = function(d) {
-        // if (!self.state.shiftNodeDrag && myself.state.mouseOverNode == null) {
-        console.log("svg click");
-        if (!self.state.shiftNodeDrag) {
-            if (d3.event.shiftKey) {
-                self.stopForce();
-                var coordinates = d3.mouse(self.container.node());
-                var myX = coordinates[0];
-                var myY = coordinates[1];
-
-                self.maxId += 1;
-                var newNode = {
-                    "id": self.maxId,
-                    "name": "New Node",
-                    "group": 3,
-                    "x": myX,
-                    "y": myY,
-                    "fx": null,
-                    "fy": null,
-                    // "fx": myX,
-                    // "fy": myY,
-                };
-                // console.log(newNode);
-                self.graph.nodes.push(newNode);
-                self.refreshGraph();
-                // self.simulation.tick();
-                self.ticked();
-            }
-        } else {
-            if (!self.state.mouseOverNode) {
-                self.state.shiftNodeDrag = false;
-                self.updateDragLine();
-            }
-        }
-        if (self.state.selectedNode !== null && self.state.mouseOverNode === null) {
-            d3.select(".selectednode")
-                .attr("class", "nodecircle");
-            self.state.selectedNode = null;
-        }
-    };
-    // end svg mouse event listeners
-    // }}}
-
-    //##################################################
-    //# Update the window on a resize
-    //##################################################
-    // {{{
-    this.updateWindow = function(svg) {
-        var docEl = document.documentElement,
-            bodyEl = document.getElementsByTagName('body')[0];
-        var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
-        var y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
-        svg.attr("width", x).attr("height", y);
-    };
-    // }}}
-
-    //##################################################
-    //# Zoom event listeners
-    //##################################################
-    // {{{
-    self.zoomed = function() {
-        var myTransform = d3.event.transform;
-        self.container
-            .attr("transform", myTransform);
-
-        // console.log(myTransform);
-        self.state.zoomTransform = myTransform;
-        // console.log(self.zoom.translate());
-
-    };
-
-    // self.zoomEnd = function() {
-    //     // alert('mouseup');
-    // };
-    // }}}
-
-    //##################################################
-    //# Drag event listeners
-    //##################################################
-    // {{{
-    this.dragstarted = function(d) {
-        if (!self.state.shiftNodeDrag) {
-            if (self.state.hasForce) {
-                if (!d3.event.active) self.simulation.alphaTarget(0.3).restart();
-            }
-            // d.fx = d.x;
-            // d.fy = d.y;
-        }
-    };
-
-
-    this.dragged = function(d) {
-        if (!self.state.shiftNodeDrag) {
-            var coordinates = new Array();
-            try {
-                coordinates = self.getMouseCoordinates();
-                d.x = coordinates[0];
-                d.y = coordinates[1];
-                // d.fx = coordinates[0];
-                // d.fy = coordinates[1];
-                // self.simulation.tick();
-                self.ticked();
-            } catch (e) {
-                return;
-            }
-        } else {
-            self.updateDragLine();
-        }
-    };
-
-    this.dragended = function(d) {
-        if (!self.state.shiftNodeDrag) {
-            if (self.state.hasForce) {
-                if (!$('#fixOnDragBox').is(":checked")) {
-                    if (!d3.event.active) self.simulation.alphaTarget(0.3);
-                    d.fx = null;
-                    d.fy = null;
-                }
-            }
-        }
-    };
-
-    // }}} end drag event listeners
-
-    //##################################################
-    //# Mouse
-    //##################################################
-    // {{{
-
-    //##################################################
-    //# General function to get the mouse coordinates
-    //##################################################
-    // {{{
-    self.getMouseCoordinates = function() {
-        var coordinates = new Array();
-        try {
-            coordinates = d3.mouse(self.container.node());
-        } catch (err) {
-            if (d3.event) {
-                coordinates = [d3.event.x, d3.event.y];
-            } else {
-                return;
-            }
-        }
-        self.state.mouseX = coordinates[0];
-        self.state.mouseY = coordinates[1];
-
-        return coordinates;
-    };
-    // }}}
-
-    //##################################################
-    //# Node mouse event listeners
-    //##################################################
-    // {{{
-
-    //     self.nodeMouseDown = function(d) {
-    //         d3.event.stopPropagation();
-    //         if (d3.event.shiftKey) {
-    //             self.state.shiftNodeDrag = true;
-    //             self.state.mouseDownNode = d;
-    //         }
-    //     };
-
-    // self.nodeMouseUp = function(d) {
-    //     d3.event.stopPropagation();
-    // };
-
-    this.nodeClick = function(d) {
-        console.log("nodeclick");
-        d3.event.stopPropagation();
-        if (self.state.shiftNodeDrag) {
-            if (d.id !== self.state.mouseDownNode.id) {
-                console.log("test");
-                var newLink = {
-                    "source": self.state.mouseDownNode,
-                    "target": d
-                }
-
-                for (var i = 0; i < self.graph.links.length; i++) {
-                    var alink = self.graph.links[i];
-                    var alinkSrcId = alink.source.id;
-                    var alinkTarId = alink.target.id;
-                    if ((alinkSrcId === newLink.target.id && alinkTarId === newLink.source.id) || (alinkSrcId === newLink.source.id && alinkTarId === newLink.target.id)) {
-                        alert("link already exists");
-                        console.log("link already exists");
-                        self.state.shiftNodeDrag = false;
-                        self.updateDragLine();
-                        return;
-                    }
-                }
-
-                self.graph.links.push(newLink);
-                self.refreshGraph();
-                self.ticked();
-
-                self.state.mouseDownNode = null;
-                self.state.shiftNodeDrag = false;
-                self.updateDragLine();
-
-            }
-
-            // console.log(self.state.mouseDownNode);
-            // console.log(self.state.mouseOverNode);
-            // console.log(self.state.shiftNodeDrag);
-
-            // console.log(self.state.shiftNodeDrag);
-            // } else {
-            // console.log("1");
-        } else {
-            if (d3.event.shiftKey) {
-                self.state.mouseDownNode = d;
-                if (!$('#keepTheForceBox').is(":checked")) {
-                    self.stopForce();
-                }
-                self.state.shiftNodeDrag = true;
-                self.updateDragLine();
-            } else {
-                // if(self.state.selectedNode){
-                //     self.state.selectedNode
-                //         .attr("class", "nodecircle");
-                //     self.state.selectedNode = null;
-                // }
-                // if (self.state.selectedNode){
-                //     alert(self.state.selectedNode.id + "\n" + d.id);
-                // }
-                if (self.state.selectedNode && self.state.selectedNode.id === d.id) {
-                    d3.select(".selectednode")
-                        .attr("class", "nodecircle");
-                    self.state.selectedNode = null;
-                } else if (!self.state.selectedNode) {
-                    d3.select(this).attr("class", "selectednode");
-                    self.state.selectedNode = d; //d3.select(self);
-                    // updateSidebarInfo();
-                    // }
-                } else {
-                    d3.select(".selectednode")
-                        .attr("class", "nodecircle");
-                    d3.select(this).attr("class", "selectednode");
-                }
-            }
-        }
-    };
-
-    self.nodeMouseOver = function(d) {
-        self.state.mouseOverNode = d;
-    };
-    self.nodeMouseOut = function(d) {
-        self.state.mouseOverNode = null;
-    };
-    // end node mouse event listeners
-    // }}}
-
-    //
-    // end mouse functions
-    // }}}
-
-    //##################################################
-    //# Key events
-    //##################################################
-    // {{{
-
-    self.svgKeyDown = function(d) {
-        switch (d3.event.keyCode) {
-            case self.consts.BACKSPACE_KEY:
-            case self.consts.DELETE_KEY:
-                if (self.state.selectedNode) {
-
-                    self.stopForce();
-                    self.removeNodeById(self.state.selectedNode.id);
-                    // var mynodes = self.graph.nodes;
-                    // for(var i = 0; i < mynodes.length; i++) {
-                    //     if(mynodes[i] === self.state.selectedNode) {
-                    //         self.graph.nodes.splice(i, 1);
-                    //     }
-                    // }
-
-                    // var neighBorLinks = new Array();
-                    // var nodesToRemove = new Array();
-
-                    var mylinks = self.graph.links;
-                    for (var i = 0; i < mylinks.length; i++) {
-                        if (mylinks[i].source.id == self.state.selectedNode.id || mylinks[i].target.id == self.state.selectedNode.id) {
-                            // neighBorLinks.push(i);
-                            // self.graph.links.splice(i, 1);
-                            self.removeLinkBySrcTar(mylinks[i].source, mylinks[i].target);
-                        }
-                    }
-
-
-
-                    // self.simulation.nodes(myself.graph.nodes);
-                    // self.simulation.force("link").links(myself.graph.links);
-
-                    // self.graph.nodes.splice(myself.state.selectedNode);
-
-                    self.container.selectAll(".node").data(self.graph.nodes, function(d) {
-                            // return d.id + "-" + d.group;
-                            return d.id
-                                // return d;
-                        })
-                        .exit()
-                        .remove();
-
-                    self.container.selectAll(".link")
-                        .data(self.graph.links, function(d) {
-                            return d.source.id + '-' + d.target.id;
-                            // return d;
-                        })
-                        .exit()
-                        .remove();
-
-                    self.refreshGraph();
-                    self.simulation.tick();
-                    self.ticked();
-
-                    d3.select(".selectednode")
-                        .attr("class", "nodecircle");
-                    self.state.selectedNode = null;
-
-                    if ($('#keepTheForceBox').is(":checked")) {
-                        self.startForce();
-                    }
-
-                    // self.graph.nodes.splice(myself.state.selectedNode);
-                    // self.refreshGraph();
-                    // self.simulation.tick();
-                    // self.ticked();
-                }
-                break;
-        }
-    };
-
-
-    self.removeNodeById = function(id) {
-        self.graph.nodes = self.graph.nodes.filter(e => e.id !== id);
-
-        // var mynodes = self.graph.nodes;
-        // for(var i = 0; i < mynodes.length; i++) {
-        //     if(mynodes[i].id === id) {
-        //         self.graph.nodes.splice(i, 1);
-        //     }
-        // }
-    };
-
-    self.removeLinkBySrcTar = function(src, tar) {
-        self.graph.links = self.graph.links.filter(e => !(
-            (e.source == src && e.target == tar) ||
-            (e.source == tar && e.target == src)))
-
-        // var mylinks = self.graph.links;
-        // for(var i = 0; i < mylinks.length; i++) {
-        //     if((mylinks[i].source == src && mylinks[i].target == tar)
-        //         || (mylinks[i].source == tar && mylinks[i].target == src)) {
-        //         self.graph.links.splice(i, 1);
-        //     }
-        // }
-    };
-    // }}}
-
-    //##################################################
-    //# Public functions used by the interface
-    //##################################################
-    // {{{
-    this.setGraph = function(newGraph) {
-        this.graph = newGraph;
-        // console.log(this.graph.links);
-        // console.log(this.simulation);
-        // this.simulation.nodes(this.graph.nodes);
-        // this.simulation.force("link").links(this.graph.links);
-        this.refreshGraph();
-    };
-
-    this.startForce = function() {
-        this.state.hasForce = true;
-        this.simulation.alphaTarget(0.3).restart();
-        $("#toggleForceId").text("Pause");
-    };
-
-    this.stopForce = function() {
-        this.state.hasForce = false;
-        this.simulation.stop();
-        $("#toggleForceId").text("Play");
-    };
-
-    this.hideLabels = function() {
-        this.container.selectAll(".nodeLabel")
-            .style("opacity", function() {
-                return $('#hideLabelsBox').is(":checked") ? 0 : 1
-            });
-    };
-    // end public functions
-    // }}}
-
-
     this.zoom = d3.zoom()
         .scaleExtent([-10, 20])
         .on("zoom", this.zoomed)
-        // .on("end", this.zoomEnd);
+        .on("end", this.zoomEnd);
 
+    this.margin = {
+        "top": -5,
+        "right": -5,
+        "bottom": -5,
+        "left": -5
+    };
+    // this.svg = d3.select("body")
     this.svg = d3.select("#svgDiv")
         .append("svg")
         .attr("id", "svgid")
@@ -625,17 +72,13 @@ function MyGraph() {
 
     // listen for resize
     window.onresize = function() {
-        self.updateWindow(self.svg);
+        this.updateWindow(this.svg);
     };
 
     this.container = this.svg.append("svg:g").attr("id", "containergroup");
     this.containerLinks = this.container.append("svg:g").attr("id", "containerlinksgroup");
     this.containerNodes = this.container.append("svg:g").attr("id", "containernodesgroup");
     this.color = d3.scaleOrdinal(d3.schemeCategory20);
-
-    this.dragline = this.container.append("line")
-        .attr("id", "draglineid")
-        .attr("class", "hiddendragline");
 
     this.simulation = d3.forceSimulation()
         .stop()
@@ -656,14 +99,582 @@ function MyGraph() {
             .strength(0.9)
 
         )
-        // .force("center", d3.forceCenter(this.width / 2, this.height / 2));
+        .force("center", d3.forceCenter(this.width / 2, this.height / 2));
 
     this.simulation
         .on("tick", this.ticked);
 
+    this.dragline = this.container.append("line")
+        .attr("id", "draglineid")
+        .attr("class", "hiddendragline");
+
+    //##################################################
+    //# SVG mouse event listeners
+    //##################################################
+    this.svgMouseMove = function(d) {
+        if (this.state.shiftNodeDrag) {
+            this.updateDragLine();
+        }
+    }
+
+    //##################################################
+    //# Update the line to connect nodes
+    //# Make it follow the pointer position
+    //##################################################
+    // {{{
+    updateDragLine = function() {
+        if (this.state.shiftNodeDrag) {
+            var myX = 0;
+            var myY = 0;
+            try {
+                var coordinates = this.getMouseCoordinates();
+                var myX = coordinates[0];
+                var myY = coordinates[1];
+            } catch (err) {
+                return;
+            }
+
+            var myX = coordinates[0];
+            var myY = coordinates[1];
+
+            this.dragline.attr("class", "dragline");
+            var dnode = this.state.mouseDownNode;
+            this.dragline
+                .attr("x1", function() {
+                    if (dnode.fx) {
+                        return dnode.fx
+                    }
+                    return dnode.x;
+                })
+                .attr("y1", function(d) {
+                    if (dnode.fy) {
+                        return dnode.fy;
+                    }
+                    return dnode.y
+                })
+                .attr("x2", myX)
+                .attr("y2", myY)
+                .attr("opacity", 1)
+                .attr("stroke-opacity", 1)
+                .attr("stroke-width", 6);
+
+        } else {
+            this.dragline.attr("class", "hiddendragline");
+        }
+    }
+    // }}}
+
+}
+// }}} end of initialiization
+
+// MyGraph.prototype = {
+
+//##################################################
+//# Draw the graph
+//##################################################
+// {{{
+MyGraph.prototype.refreshGraph = function() {
+
+        var links = myself.graph.links;
+        var nodes = myself.graph.nodes;
+
+        var link = myself.containerLinks.selectAll(".link")
+            .data(links, function(d) {
+                return d.source.id + '-' + d.target.id;
+                // return d;
+            });
+
+        link.enter()
+            .append("line")
+            .attr("class", "link")
+            .attr("data-src", function(d) {
+                return d.source.id
+            })
+            .attr("data-tar", function(d) {
+                return d.target.id
+            })
+
+        // .style("stroke-width", function(d) {
+        //     return Math.sqrt(d.value);
+        // });
+
+        var gnodes = myself.containerNodes.selectAll('.node')
+            .data(nodes, function(d) {
+                // return d.id + "-" + d.group;
+                return d.id;
+                // return d;
+            });
+
+        var newNodes = gnodes.enter()
+            .append('g')
+            .attr("class", "node")
+            .attr("data-id", function(d) {
+                return d.id
+            })
+            .call(d3.drag()
+                .on("start", this.dragstarted)
+                .on("drag", this.dragged)
+                .on("end", this.dragended))
+
+        var node = newNodes.append("circle")
+            // .on("mousedown", myself.nodeMouseDown)
+            // .on("mouseup", myself.nodeMouseUp)
+            .attr("class", "nodecircle")
+            .on("click", myself.nodeClick)
+            .on("mouseover", myself.nodeMouseOver)
+            .on("mouseout", myself.nodeMouseOut)
+            .style("fill", function(d) {
+                return myself.color(d.group);
+            });
+
+        var labels = newNodes.append("svg:text")
+            .attr("class", "nodeLabel")
+            .attr("x", 7)
+            .attr("dy", ".35em")
+            .text(function(d) {
+                return d.name;
+            });
+
+
+        myself.simulation.nodes(nodes);
+        myself.simulation.force("link").links(links);
+        if (myself.state.hasForce) {
+            myself.simulation.alphaTarget(0.3).restart();
+        }
+
+        labels.exit().remove();
+        newNodes.exit().remove();
+        node.exit().remove();
+        link.exit().remove();
+    }
+    // }}} end of refreshGraph()
+
+//##################################################
+//# Update nodes on each force tick
+//##################################################
+// {{{
+MyGraph.prototype.ticked = function() {
+        myself.containerLinks.selectAll(".link")
+            .attr("x1", function(d) {
+                return d.source.x;
+            })
+            .attr("y1", function(d) {
+                return d.source.y;
+            })
+            .attr("x2", function(d) {
+                return d.target.x;
+            })
+            .attr("y2", function(d) {
+                return d.target.y;
+            });
+
+        myself.containerNodes.selectAll('.node')
+            .attr("transform", function(d) {
+                var nX = d.fx ? d.fx : d.x;
+                var nY = d.fy ? d.fy : d.y;
+                return 'translate(' + [nX, nY] + ')';
+            });
+        // .attr("x", function(d){return d.x})
+        // .attr("y", function(d){return d.y});
+        myself.updateDragLine();
+    }
+    // }}}  end of ticked
+
+//##################################################
+//# Update the window on a resize
+//##################################################
+// {{{
+MyGraph.prototype.updateWindow = function(svg) {
+        var docEl = document.documentElement,
+            bodyEl = document.getElementsByTagName('body')[0];
+        var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
+        var y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
+        svg.attr("width", x).attr("height", y);
+    }
+    // }}}
+
+//##################################################
+//# Zoom event listeners
+//##################################################
+// {{{
+MyGraph.prototype.zoomed = function() {
+    var myTransform = d3.event.transform;
+    myself.container
+        .attr("transform", myTransform)
+
+    // console.log(myTransform);
+    myself.state.zoomTransform = myTransform;
+    // console.log(myself.zoom.translate());
+
 }
 
-// }}} end of initialiization
+MyGraph.prototype.zoomEnd = function() {
+        // alert('mouseup');
+    }
+    // }}}
+
+//##################################################
+//# Drag event listeners
+//##################################################
+// {{{
+MyGraph.prototype.dragstarted = function(d) {
+    if (!myself.state.shiftNodeDrag) {
+        if (myself.state.hasForce) {
+            if (!d3.event.active) myself.simulation.alphaTarget(0.3).restart();
+        }
+        // d.fx = d.x;
+        // d.fy = d.y;
+    }
+}
+
+
+MyGraph.prototype.dragged = function(d) {
+    if (!myself.state.shiftNodeDrag) {
+        var coordinates = new Array();
+        try {
+            coordinates = myself.getMouseCoordinates();
+            d.fx = coordinates[0];
+            d.fy = coordinates[1];
+            myself.simulation.tick();
+            myself.ticked();
+        } catch (e) {
+            return;
+        }
+    } else {
+        myself.updateDragLine();
+    }
+}
+
+MyGraph.prototype.dragended = function(d) {
+    if (!myself.state.shiftNodeDrag) {
+        if (myself.state.hasForce) {
+            if (!$('#fixOnDragBox').is(":checked")) {
+                if (!d3.event.active) myself.simulation.alphaTarget(0.3);
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+    }
+}
+
+// }}} end drag event listeners
+
+//##################################################
+//# Mouse
+//##################################################
+// {{{
+
+//##################################################
+//# General function to get the mouse coordinates
+//##################################################
+// {{{
+MyGraph.prototype.getMouseCoordinates = function() {
+        var coordinates = new Array();
+        try {
+            coordinates = d3.mouse(myself.container.node());
+        } catch (err) {
+            if (d3.event) {
+                coordinates = [d3.event.x, d3.event.y];
+            } else {
+                return;
+            }
+        }
+        myself.state.mouseX = coordinates[0];
+        myself.state.mouseY = coordinates[1];
+
+        return coordinates;
+    }
+    // }}}
+
+//##################################################
+//# Node mouse event listeners
+//##################################################
+// {{{
+
+//     nodeMouseDown: function(d) {
+//         d3.event.stopPropagation();
+//         if (d3.event.shiftKey) {
+//             myself.state.shiftNodeDrag = true;
+//             myself.state.mouseDownNode = d;
+//         }
+//     }
+
+// nodeMouseUp: function(d) {
+//     d3.event.stopPropagation();
+// }
+
+MyGraph.prototype.nodeClick = function(d) {
+    d3.event.stopPropagation();
+    if (myself.state.shiftNodeDrag) {
+        if (d.id != myself.state.mouseDownNode.id) {
+            // console.log("2");
+            // if (d.id != myself.state.mouseDownNode) {
+
+            var newLink = {
+                "source": myself.state.mouseDownNode,
+                "target": d
+            }
+
+            // console.log(newLink);
+            for (var i = 0; i < myself.graph.links.length; i++) {
+                var alink = myself.graph.links[i];
+                var alinkSrcId = alink.source.id;
+                var alinkTarId = alink.target.id;
+                if ((alinkSrcId === newLink.target && alinkTarId === newLink.source) || (alinkSrcId === newLink.source && alinkTarId === newLink.target)) {
+                    alert("link already exists");
+                    myself.state.shiftNodeDrag = false;
+                    myself.updateDragLine();
+                    return;
+                }
+            }
+
+            myself.graph.links.push(newLink);
+            myself.refreshGraph();
+
+            myself.state.shiftNodeDrag = false;
+            myself.updateDragLine();
+
+            // myself.simulation.tick();
+            myself.ticked();
+        }
+
+        myself.state.mouseDownNode = d;
+
+        // console.log(myself.state.mouseDownNode);
+        // console.log(myself.state.mouseOverNode);
+        // console.log(myself.state.shiftNodeDrag);
+
+        // console.log(myself.state.shiftNodeDrag);
+        // } else {
+        // console.log("1");
+    } else {
+        myself.state.mouseDownNode = d;
+        if (d3.event.shiftKey) {
+            if (!$('#keepTheForceBox').is(":checked")) {
+                myself.stopForce();
+            }
+            myself.state.mouseDownNode = d;
+            myself.state.shiftNodeDrag = true;
+            myself.updateDragLine();
+        } else {
+            // if(myself.state.selectedNode){
+            //     myself.state.selectedNode
+            //         .attr("class", "nodecircle");
+            //     myself.state.selectedNode = null;
+            // }
+            // if (myself.state.selectedNode){
+            //     alert(myself.state.selectedNode.id + "\n" + d.id);
+            // }
+            if (myself.state.selectedNode !== null && myself.state.selectedNode.id === d.id) {
+                d3.select(".selectednode")
+                    .attr("class", "nodecircle");
+                myself.state.selectedNode = null;
+            } else if (!myself.state.selectedNode) {
+                d3.select(this).attr("class", "selectednode");
+                myself.state.selectedNode = d; //d3.select(this);
+                // updateSidebarInfo();
+                // }
+            } else {
+                d3.select(".selectednode")
+                    .attr("class", "nodecircle");
+                d3.select(this).attr("class", "selectednode");
+            }
+        }
+    }
+}
+
+MyGraph.prototype.nodeMouseOver = function(d) {
+    myself.state.mouseOverNode = d;
+}
+MyGraph.prototype.nodeMouseOut = function(d) {
+        myself.state.mouseOverNode = null;
+    }
+    // end node mouse event listeners
+    // }}}
+
+
+MyGraph.prototype.svgClick = function(d) {
+        // if (!myself.state.shiftNodeDrag && myself.state.mouseOverNode == null) {
+        if (!myself.state.shiftNodeDrag) {
+            if (d3.event.shiftKey) {
+                myself.stopForce();
+                var coordinates = d3.mouse(myself.container.node());
+                var myX = coordinates[0];
+                var myY = coordinates[1];
+
+                myself.maxId += 1;
+                var newNode = {
+                    "id": myself.maxId,
+                    "name": "New Node",
+                    "group": 3,
+                    "x": myX,
+                    "y": myY,
+                    "fx": null,
+                    "fy": null,
+                    // "fx": myX,
+                    // "fy": myY,
+                };
+                // console.log(newNode);
+                myself.graph.nodes.push(newNode);
+                myself.refreshGraph();
+                // myself.simulation.tick();
+                myself.ticked();
+            }
+        } else {
+            if (!myself.state.mouseOverNode) {
+                myself.state.shiftNodeDrag = false;
+                myself.updateDragLine();
+            }
+        }
+        if (myself.state.selectedNode !== null && myself.state.mouseOverNode === null) {
+            d3.select(".selectednode")
+                .attr("class", "nodecircle");
+            myself.state.selectedNode = null;
+        }
+
+    }
+    // end mouse functions
+    // }}}
+
+//##################################################
+//# Key events
+//##################################################
+// {{{
+
+MyGraph.prototype.svgKeyDown = function(d) {
+    switch (d3.event.keyCode) {
+        case myself.consts.BACKSPACE_KEY:
+        case myself.consts.DELETE_KEY:
+            if (myself.state.selectedNode) {
+
+                myself.stopForce();
+                myself.removeNodeById(myself.state.selectedNode.id);
+                // var mynodes = myself.graph.nodes;
+                // for(var i = 0; i < mynodes.length; i++) {
+                //     if(mynodes[i] === myself.state.selectedNode) {
+                //         myself.graph.nodes.splice(i, 1);
+                //     }
+                // }
+
+                // var neighBorLinks = new Array();
+                // var nodesToRemove = new Array();
+
+                var mylinks = myself.graph.links;
+                for (var i = 0; i < mylinks.length; i++) {
+                    if (mylinks[i].source.id == myself.state.selectedNode.id || mylinks[i].target.id == myself.state.selectedNode.id) {
+                        // neighBorLinks.push(i);
+                        // myself.graph.links.splice(i, 1);
+                        myself.removeLinkBySrcTar(mylinks[i].source, mylinks[i].target);
+                    }
+                }
+
+
+
+                // myself.simulation.nodes(myself.graph.nodes);
+                // myself.simulation.force("link").links(myself.graph.links);
+
+                // myself.graph.nodes.splice(myself.state.selectedNode);
+
+                myself.container.selectAll(".node").data(myself.graph.nodes, function(d) {
+                        // return d.id + "-" + d.group;
+                        return d.id
+                            // return d;
+                    })
+                    .exit()
+                    .remove();
+
+                myself.container.selectAll(".link")
+                    .data(myself.graph.links, function(d) {
+                        return d.source.id + '-' + d.target.id;
+                        // return d;
+                    })
+                    .exit()
+                    .remove();
+
+                myself.refreshGraph();
+                myself.simulation.tick();
+                myself.ticked();
+
+                d3.select(".selectednode")
+                    .attr("class", "nodecircle");
+                myself.state.selectedNode = null;
+
+                if ($('#keepTheForceBox').is(":checked")) {
+                    myself.startForce();
+                }
+
+                // myself.graph.nodes.splice(myself.state.selectedNode);
+                // myself.refreshGraph();
+                // myself.simulation.tick();
+                // myself.ticked();
+            }
+            break;
+    }
+}
+
+
+MyGraph.prototype.removeNodeById = function(id) {
+    myself.graph.nodes = myself.graph.nodes.filter(e => e.id !== id);
+
+    // var mynodes = myself.graph.nodes;
+    // for(var i = 0; i < mynodes.length; i++) {
+    //     if(mynodes[i].id === id) {
+    //         myself.graph.nodes.splice(i, 1);
+    //     }
+    // }
+}
+
+MyGraph.prototype.removeLinkBySrcTar = function(src, tar) {
+        myself.graph.links = myself.graph.links.filter(e => !(
+            (e.source == src && e.target == tar) ||
+            (e.source == tar && e.target == src)))
+
+        // var mylinks = myself.graph.links;
+        // for(var i = 0; i < mylinks.length; i++) {
+        //     if((mylinks[i].source == src && mylinks[i].target == tar)
+        //         || (mylinks[i].source == tar && mylinks[i].target == src)) {
+        //         myself.graph.links.splice(i, 1);
+        //     }
+        // }
+    }
+    // }}}
+
+//##################################################
+//# Public functions used by the interface
+//##################################################
+// {{{
+MyGraph.prototype.setGraph = function(newGraph) {
+    myself.graph = newGraph;
+    // console.log(myself.graph.links);
+    // console.log(myself.simulation);
+    // myself.simulation.nodes(myself.graph.nodes);
+    // myself.simulation.force("link").links(myself.graph.links);
+    myself.refreshGraph();
+}
+
+MyGraph.prototype.startForce = function() {
+    myself.state.hasForce = true;
+    myself.simulation.alphaTarget(0.3).restart();
+    $("#toggleForceId").text("Pause");
+}
+
+MyGraph.prototype.stopForce = function() {
+    myself.state.hasForce = false;
+    myself.simulation.stop();
+    $("#toggleForceId").text("Play");
+}
+
+MyGraph.prototype.hideLabels = function() {
+        myself.container.selectAll(".nodeLabel")
+            .style("opacity", function() {
+                return $('#hideLabelsBox').is(":checked") ? 0 : 1
+            });
+    }
+    // end public functions
+    // }}}
+
+// end mygraph prototype
+// }
 
 myGraph = new MyGraph();
 // $.getJSON("json/miserables").then(function(response) {
@@ -823,9 +834,6 @@ function readSingleFile(evt) {
 
             myGraph.graph.nodes = data.nodes;
             myGraph.graph.links = newLinks;
-
-            myGraph.maxId = Math.max.apply(Math,array.map(function(o){return o.id;}))
-            myGraph.maxId += 1;
 
             // TODO: restore the state
             // myGraph.state = data.state;
