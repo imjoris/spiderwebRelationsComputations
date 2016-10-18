@@ -32,3 +32,9 @@
     background-color: #111111;
 }
 
+#upload {
+    visibility: hidden;
+    width: 0;
+    height: 0;
+}
+

@@ -18,7 +18,13 @@ function MyGraph() {
         mouseX: 0,
         mouseY: 0,
         alerted: false,
-        hasClickedNode: false
+        hasClickedNode: false,
+        // zoomTransform: null,
+        zoomTransform: {
+            k: 1,
+            x: 0,
+            y: 0
+        },
     }
     this.consts = {
         BACKSPACE_KEY: 8,
@@ -61,7 +67,7 @@ function MyGraph() {
         .on("click", this.svgClick)
         .on("mousemove", this.svgMouseMove)
         .call(this.zoom)
-        .on("dblclick.zoom", null);
+        .on("dblclick.zoom", null)
 
     d3.select("body")
         .on("keydown", this.svgKeyDown)
@@ -134,7 +140,7 @@ MyGraph.prototype = {
         //     return Math.sqrt(d.value);
         // });
 
-        var gnodes = this.container.selectAll('.node')
+        var gnodes = myself.container.selectAll('.node')
             .data(nodes, function(d) {
                 return d.id + "-" + d.group;
                 // return d;
@@ -277,8 +283,14 @@ MyGraph.prototype = {
     //##################################################
     // {{{
     zoomed: function() {
+        myTransform = d3.event.transform;
         myself.container
-            .attr("transform", d3.event.transform)
+            .attr("transform", myTransform)
+
+        // console.log(myTransform);
+        myself.state.zoomTransform = myTransform;
+        // console.log(myself.zoom.translate());
+
     },
 
     zoomEnd: function() {
@@ -635,44 +647,20 @@ MyGraph.prototype = {
 
 }
 
+myGraph = new MyGraph(".main");
+// $.getJSON("json/miserables").then(function(response) {
+//     myGraph.setGraph(response);
+// });
+
 function toggleForce() {
     myGraph.state.hasForce ? myGraph.stopForce() : myGraph.startForce();
 }
 
-myGraph = new MyGraph(".main");
-$.getJSON("json/miserables").then(function(response) {
-    myGraph.setGraph(response);
-});
-
-// myForceLinkDistSlider.name="linkforceslide";
-// mySlider.min="0";
-// mySlider.max="150";
-// mySlider.step="5";
-// mySlider.value="40";
-// mySlider.tooltip="show";
-
-// mySlider = new Slider("#forceDistSliderDiv");
-// mySlider = new Slider("#forceDistSliderInput");
-// , {
-// });
-
-
-// var myForceLinkDistSlider = $(document.getElementById("sliderInput:forceLinkDist")).slider();
-// myForceLinkDistSlider.slider('setValue', myself.defaults.forceLinkDistance);
-// $(document.getElementById("sliderLabel:forceLinkDist")).text(myForceLinkDistSlider.slider('getValue'));
-// $(document.getElementById("sliderDiv:forceLinkDist"))
-//     .on("change", function linkDistChanged(event, val) {
-//         var val = myForceLinkDistSlider.slider('getValue');
-//         $(document.getElementById("sliderLabel:forceLinkDist")).text(val);
-//         myself.simulation.force("link").distance(val);
-//     });
 
 // function initSliders(){
 addSlider("forceLinkDist", myGraph.defaults.forceLinkDistance, function(val) {
     myGraph.simulation.force("link").distance(val);
 });
-
-
 
 addSlider("forceChargeDistanceMin", myGraph.defaults.forceChargeDistanceMin, function(val) {
     myGraph.simulation.force("charge").distanceMin(val);
@@ -692,23 +680,6 @@ addSlider("forceCollideRadius", myGraph.defaults.forceCollideRadius, function(va
 addSlider("forceCollideStrength", myGraph.defaults.forceCollideStrength, function(val) {
     myGraph.simulation.force("collide").strength(val);
 });
-//     forceCollideStrength: 0.9,
-
-// addSlider("forceChargeDistanceMin", myGraph.defaults.forceChargeDistanceMin, function(val){
-//     myGraph.simulation.force("charge").distanceMin(val);
-// })
-// addSlider("forceChargeDistanceMax", myGraph.defaults.forceChargeDistanceMax, function(val){
-//     myGraph.simulation.force("charge").distanceMax(val);
-// })
-// addSlider("", myGraph.defaults.forceChargeDistanceMax, function(val){
-//     myGraph.simulation.force("charge").distanceMax(val);
-// })
-
-
-
-// forceCollideMargin: 10,
-// forceCollideStrength: 0.9,
-
 
 function addSlider(IdSuffix, defaultVal, valueCallBack) {
     var sl = $(document.getElementById("sliderInput:" + IdSuffix)).slider();
@@ -720,7 +691,6 @@ function addSlider(IdSuffix, defaultVal, valueCallBack) {
             $(document.getElementById("sliderLabel:" + IdSuffix)).text(val);
             valueCallBack(val);
         });
-
 }
 
 function onClickExport() {
@@ -734,12 +704,25 @@ function onClickExport() {
     downloadLink.download = "newesttree.svg";
     document.body.appendChild(downloadLink);
     downloadLink.click();
-    // document.body.removeChild(downloadLink);
+    document.body.removeChild(downloadLink);
 }
 
 function onClickExportJson() {
 
+    // console.log(d3.zoomTransform(myGraph.zoom.scale()));
+    var myForce = {
+        "forceLinkDist": myGraph.simulation.force("link").distance()(),
+
+        "forceChargeStrength": myGraph.simulation.force("charge").strength()(),
+        "forceChargeDistanceMin": myGraph.simulation.force("charge").distanceMin(),
+        "forceChargeDistanceMax": myGraph.simulation.force("charge").distanceMax(),
+
+        "forceCollideRadius": myGraph.simulation.force("collide").radius()(),
+        "forceCollideStrength": myGraph.simulation.force("collide").strength(),
+    }
+
     myData = {
+        "force": myForce,
         "nodes": myGraph.simulation.nodes(),
         "links": myGraph.simulation.force("link").links(),
         "state": myGraph.state,
@@ -784,230 +767,323 @@ function readSingleFile(evt) {
             var contents = e.target.result;
             data = JSON.parse(contents);
 
-            $("#containergroup").empty();
+            // d3.select("#containergroup").transition()
+            //     .duration(1000)
+            //     .ease(d3.easeLinear)
+            //     .attr("opacity", 0)
+            // .on("end", function() {
 
-            // Just setting myGraph.graph.links to the received json data.links
-            // Will cause an error, because the data.links.source and .target
-            // Do not reference the object in data.nodes, but are a new
-            // object themselves.
-            // The ticked() function however, updates the lines to go from
-            // the links source to the links target locations
-            var newLinks = [];
-            for(var i = 0; i < data.links.length; i++){
-                newLinks.push({
-                    source: data.nodes.filter(e => e.id === data.links[i].source.id)[0],
-                    target: data.nodes.filter(e => e.id === data.links[i].target.id)[0],
+                    $("#containergroup").empty();
+                    myGraph.dragline = myGraph.container.append("line")
+                        .attr("id", "draglineid")
+                        .attr("class", "hiddendragline");
+                    // console.log(contents);
+
+                    // Just setting myGraph.graph.links to the received json data.links
+                    // Will cause an error, because the data.links.source and .target
+                    // Do not reference the object in data.nodes, but are a new
+                    // object themselves.
+                    // The ticked() function however, updates the lines to go from
+                    // the links source to the links target locations
+                    var newLinks = [];
+                    for (var i = 0; i < data.links.length; i++) {
+                        newLinks.push({
+                            source: data.nodes.filter(e => e.id === data.links[i].source.id)[0],
+                            target: data.nodes.filter(e => e.id === data.links[i].target.id)[0],
+                        });
+
+                    }
+
+                    for (var key in data.force) {
+                        if (data.force.hasOwnProperty(key)) {
+                            $("#sliderInput\\:" + key).changeSliderVal(data.force[key]);
+                        }
+                    }
+
+                    // myGraph.container
+                    //     .attr("transform", data.state.zoomTransform);
+
+                    myGraph.graph.nodes = data.nodes;
+                    myGraph.graph.links = newLinks;
+
+                    // TODO: restore the state
+                    // myGraph.state = data.state;
+
+                    myGraph.refreshGraph();
+                    // d3.selectAll(".node").attr("opacity", 0);
+                    d3.selectAll("#containergroup").attr("opacity", 0);
+
+                    // d3.selectAll(".node").transition()
+                    d3.select("#containergroup").transition()
+                        .duration(1000)
+                        .ease(d3.easeLinear)
+                        .attr("opacity", 1);
+
+                    myGraph.ticked();
+                    var zt = data.state.zoomTransform;
+                    d3.select("#svgid").transition()
+                        .duration(750)
+                        .ease(d3.easeLinear)
+                        .call(myGraph.zoom.transform,
+                            d3.zoomIdentity
+                            .translate(zt.x, zt.y).scale(zt.k));
+
+                    // myGraph.zoom.transform(myGraph.container, data.state.zoomTransform);
+                    // console.log(data.state.zoomTransform);
+                    // myGraph.container.attr("transform", data.state.zoomTransform);
+                    // myGraph.container.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+                // });
+            }
+            r.readAsText(f);
+        } else {
+            alert("Failed to load file");
+        }
+    }
+
+    $.fn.changeSliderVal = function(v) {
+        return $(this).slider('setValue', v).trigger("change");
+    }
+
+    function readSingleFileSVGXML(evt) {
+        //Retrieve the first (and only!) File from the FileList object
+        var f = evt.target.files[0];
+
+        if (f) {
+            var r = new FileReader();
+            r.onload = function(e) {
+                var contents = e.target.result;
+                // var data = jQuery.parseXML(contents);
+                // $.parseXML(contents);
+
+                // .select(".containergroup")
+                // .each(function(d, i) {
+                //     console.log(d);
+                //     // myself.graph.nodes[i] = d.data("id");
+                // });
+
+                // d3.xml(contents, function(error, data) {
+                //     console.log(JSON.stringify(data));
+                // myGraph.graph.links = [].map.call(data.querySelectorAll(".link"), function(node) {
+                //     // console.log(JSON.stringify(node));
+                //     return {
+                //         source: node.getAttribute("data-source"),
+                //         target: node.getAttribute("data-target")
+                //     };
+                // });
+
+                // // alert(xmlDoc.documentElement.nodeName);
+                var mySvg = document.getElementById("svgDiv")
+
+                var newGraph = new Array();
+                newGraph["nodes"] = [].map.call(data.querySelectorAll(".node"), function(n) {
+                    return {
+                        id: n.getAttribute("data-id"),
+                        // myx: n.getAttribute("x")
+                        myTransform: n.getAttribute("transform"),
+                        // myStyle: n.getAttribute("style")
+                        myCircleStyle: n.getElementsByTagName("circle")[0].getAttribute("style")
+                    };
                 });
+
+                console.log(newGraph.nodes);
+                newGraph["links"] = [].map.call(data.querySelectorAll(".link"), function(l) {
+                    return {
+                        source: newGraph.nodes.filter(e => e.id === l.getAttribute("data-src"))[0],
+                        target: newGraph.nodes.filter(e => e.id === l.getAttribute("data-tar"))[0],
+                        myx1: l.getAttribute("x1"),
+                        myx2: l.getAttribute("x2"),
+                        myy1: l.getAttribute("y1"),
+                        myy2: l.getAttribute("y2")
+                    };
+                });
+
+                // myGraph = new MyGraph(".main");
+                // console.log(newGraph.links);
+                // myGraph.setGraph({"nodes":[], "links":[]});
+                myGraph.setGraph(newGraph);
+                d3.selectAll(".node")
+                    .data(newGraph.nodes)
+                    .attr("transform", function(d) {
+                        return d.myTransform;
+                    })
+                    .select("circle").attr("style", function(d) {
+                        return d.myCircleStyle;
+                    })
+
+                d3.selectAll(".link")
+                    .data(newGraph.links)
+                    .attr("x1", function(d) {
+                        return d.myx1;
+                    })
+                    .attr("x2", function(d) {
+                        return d.myx2;
+                    })
+                    .attr("y1", function(d) {
+                        return d.myy1;
+                    })
+                    .attr("y2", function(d) {
+                        return d.myy2;
+                    });
+
+                myGraph.simulation.nodes(newGraph.nodes);
+                myGraph.simulation.force("link").links(newGraph.links);
+                myGraph.simulation.tick();
+                myGraph.ticked();
+                // if (myself.state.hasForce) {
+                //     myself.simulation.alphaTarget(0.3).restart();
+                // }
+
+
+                // mySvg.outerHTML = contents;
+                //     myself.simulation = d3.forceSimulation()
+                //         .stop()
+                //         .force("link", d3.forceLink().id(function(d) {
+                //             return d.id;
+                //         })
+                //             // .strength(function(l){
+                //             //     return 0.2;
+                //             // })
+                //                 .distance(myGraph.defaults.forceLinkDistance)
+                //         )
+                //     .force("charge", d3.forceManyBody()
+                //         .strength(myGraph.defaults.forceChargeStrength)
+                //             .distanceMin(myGraph.defaults.forceChargeDistanceMin)
+                //             .distanceMax(myGraph.defaults.forceChargeDistanceMax)
+                //     )
+                //     .force("collide", d3.forceCollide(10)
+                //         .strength(0.9)
+
+                //     )
+                //     .force("center", d3.forceCenter(this.width / 2, this.height / 2));
+                // myGraph.simulation.nodes(myGraph.graph.nodes);
+                // myGraph.simulation.force("link").links(myGraph.graph.links);
+                myGraph.refreshGraph();
+                // myGraph.simulation.tick();
+                // myGraph.ticked();
+                // d3.select("#svgDiv").outerHTML = contents;
+
+                // var newNodes = d3.selectAll(".link");
+
+                // console.log(JSON.stringify(newNodes));
+                // console.log(newNodes);
+                // console.log(myGraph.graph.links);
+
+                // var myNodes = contents.querySelectorAll(".node");
+                // console.log(myNodes.length);
+                // console.log(JSON.stringify(myNodes));
+
+                // myGraph.graph.nodes.splice(0, myGraph.graph.nodes.length);
+                // myGraph.graph.links.splice(0, myGraph.graph.links.length);
+
+
+                // d3.selectAll(".node")
+                //     .each(function(d, i) {
+                //         alert(JSON.stringify(d));
+                //         // myself.graph.nodes[i] = d.data("id");
+                //     });
+
+                //             console.log(JSON.stringify(data));
+                //             myGraph.graph.links = [].map.call(data.querySelectorAll(".link"), function(node) {
+                //                 console.log(JSON.stringify(node));
+                //                 return {
+                //                     source: node.getAttribute("data-source"),
+                //                     target: node.getAttribute("data-target")
+                //                 };
+                //             });
+
+                // console.log(myGraph.graph.nodes.length + "\n" + myGraph.graph.links.length);
+                // console.log(JSON.stringify(myGraph.graph.links));
+
+
+                // d3.selectAll(".link")
+                //     .each(function(d,i){
+                //         if(!myGraph.state.alerted){
+                //         alert(JSON.stringify(d));
+                //             myGraph.state.alerted = true;
+                //         }
+                //         // myself.graph.links[i] = d;
+                //     });
+                // return;
+                // d3.selectAll(".node")
+                //     .each(function(d,i){
+                //         myself.graph.nodes[i] = d;
+                //     });
+
+                // alert(mygraph.graph.nodes.first().id)
+
+                // var newSvg = mySvg.parentNode.replaceChild(xmlDoc, mySvg);
+                // alert( "Got the file \n"
+                //     +"name: " + f.name + "\n"
+                //         +"type: " + f.type + "\n"
+                //         +"size: " + f.size + " bytes\n"
+                //         + "starts with: " + contents.substr(1, contents.indexOf("\n"))
+                // );
 
             }
-
-            myGraph.graph.nodes = data.nodes;
-            myGraph.graph.links = newLinks;
-
-            // TODO: restore the state
-            myGraph.state = data.state;
-
-            myGraph.refreshGraph();
-            myGraph.ticked();
+            r.readAsText(f);
+        } else {
+            alert("Failed to load file");
         }
-        r.readAsText(f);
-    } else {
-        alert("Failed to load file");
     }
-}
 
-function readSingleFileSVGXML(evt) {
-    //Retrieve the first (and only!) File from the FileList object
-    var f = evt.target.files[0];
+    function test() {
+        // console.log(myGraph.zoom);
+        // console.log(d3.select("#containergroup"));
+        // console.log(d3.zoomIdentity);
+        // var myTransition = d3.transition()
+        //     .duration(750).call(myGraph.zoom.transform, d3.zoomIdentity);
 
-    if (f) {
-        var r = new FileReader();
-        r.onload = function(e) {
-            var contents = e.target.result;
-            // var data = jQuery.parseXML(contents);
-            // $.parseXML(contents);
+        // var myTransition = d3.transition()
+        //     .duration(750)
+        //     .call(myGraph.zoom.transform,
+        //         d3.zoomIdentity.translate(12,34).scale(1.5)
+        //     );
 
-            // .select(".containergroup")
-            // .each(function(d, i) {
-            //     console.log(d);
-            //     // myself.graph.nodes[i] = d.data("id");
-            // });
+        d3.select("#svgid").transition()
+            .duration(3000)
+            .ease(d3.easeLinear)
+            .call(myGraph.zoom.transform, d3.zoomIdentity.translate(12, 34).scale(1.5));
 
-            // d3.xml(contents, function(error, data) {
-            //     console.log(JSON.stringify(data));
-            // myGraph.graph.links = [].map.call(data.querySelectorAll(".link"), function(node) {
-            //     // console.log(JSON.stringify(node));
-            //     return {
-            //         source: node.getAttribute("data-source"),
-            //         target: node.getAttribute("data-target")
-            //     };
-            // });
-
-            // // alert(xmlDoc.documentElement.nodeName);
-            var mySvg = document.getElementById("svgDiv")
-
-            var newGraph = new Array();
-            newGraph["nodes"] = [].map.call(data.querySelectorAll(".node"), function(n) {
-                return {
-                    id: n.getAttribute("data-id"),
-                    // myx: n.getAttribute("x")
-                    myTransform: n.getAttribute("transform"),
-                    // myStyle: n.getAttribute("style")
-                    myCircleStyle: n.getElementsByTagName("circle")[0].getAttribute("style")
-                };
-            });
-
-            console.log(newGraph.nodes);
-            newGraph["links"] = [].map.call(data.querySelectorAll(".link"), function(l) {
-                return {
-                    source: newGraph.nodes.filter(e => e.id === l.getAttribute("data-src"))[0],
-                    target: newGraph.nodes.filter(e => e.id === l.getAttribute("data-tar"))[0],
-                    myx1: l.getAttribute("x1"),
-                    myx2: l.getAttribute("x2"),
-                    myy1: l.getAttribute("y1"),
-                    myy2: l.getAttribute("y2")
-                };
-            });
-
-            // myGraph = new MyGraph(".main");
-            // console.log(newGraph.links);
-            // myGraph.setGraph({"nodes":[], "links":[]});
-            myGraph.setGraph(newGraph);
-            d3.selectAll(".node")
-                .data(newGraph.nodes)
-                .attr("transform", function(d) {
-                    return d.myTransform;
-                })
-                .select("circle").attr("style", function(d) {
-                    return d.myCircleStyle;
-                })
-
-            d3.selectAll(".link")
-                .data(newGraph.links)
-                .attr("x1", function(d) {
-                    return d.myx1;
-                })
-                .attr("x2", function(d) {
-                    return d.myx2;
-                })
-                .attr("y1", function(d) {
-                    return d.myy1;
-                })
-                .attr("y2", function(d) {
-                    return d.myy2;
-                });
-
-            myGraph.simulation.nodes(newGraph.nodes);
-            myGraph.simulation.force("link").links(newGraph.links);
-            myGraph.simulation.tick();
-            myGraph.ticked();
-            // if (myself.state.hasForce) {
-            //     myself.simulation.alphaTarget(0.3).restart();
-            // }
+        // myGraph.svg.call(myGraph.zoom.transform, d3.zoomIdentity.translate(12,34).scale(1.5))
+        // myGraph.svg.call(myGraph.zoom.transform, d3.zoomIdentity.translate(12,34).scale(1.5))
+        // var t = d3.transition()
+        //     .duration(5750)
+        //     .ease(d3.easeLinear);
+        // d3.selectAll("circle").transition(t)
+        //     .style("fill", "red");
 
 
-            // mySvg.outerHTML = contents;
-            //     myself.simulation = d3.forceSimulation()
-            //         .stop()
-            //         .force("link", d3.forceLink().id(function(d) {
-            //             return d.id;
-            //         })
-            //             // .strength(function(l){
-            //             //     return 0.2;
-            //             // })
-            //                 .distance(myGraph.defaults.forceLinkDistance)
-            //         )
-            //     .force("charge", d3.forceManyBody()
-            //         .strength(myGraph.defaults.forceChargeStrength)
-            //             .distanceMin(myGraph.defaults.forceChargeDistanceMin)
-            //             .distanceMax(myGraph.defaults.forceChargeDistanceMax)
-            //     )
-            //     .force("collide", d3.forceCollide(10)
-            //         .strength(0.9)
-
-            //     )
-            //     .force("center", d3.forceCenter(this.width / 2, this.height / 2));
-            // myGraph.simulation.nodes(myGraph.graph.nodes);
-            // myGraph.simulation.force("link").links(myGraph.graph.links);
-            myGraph.refreshGraph();
-            // myGraph.simulation.tick();
-            // myGraph.ticked();
-            // d3.select("#svgDiv").outerHTML = contents;
-
-            // var newNodes = d3.selectAll(".link");
-
-            // console.log(JSON.stringify(newNodes));
-            // console.log(newNodes);
-            // console.log(myGraph.graph.links);
-
-            // var myNodes = contents.querySelectorAll(".node");
-            // console.log(myNodes.length);
-            // console.log(JSON.stringify(myNodes));
-
-            // myGraph.graph.nodes.splice(0, myGraph.graph.nodes.length);
-            // myGraph.graph.links.splice(0, myGraph.graph.links.length);
-
-
-            // d3.selectAll(".node")
-            //     .each(function(d, i) {
-            //         alert(JSON.stringify(d));
-            //         // myself.graph.nodes[i] = d.data("id");
-            //     });
-
-            //             console.log(JSON.stringify(data));
-            //             myGraph.graph.links = [].map.call(data.querySelectorAll(".link"), function(node) {
-            //                 console.log(JSON.stringify(node));
-            //                 return {
-            //                     source: node.getAttribute("data-source"),
-            //                     target: node.getAttribute("data-target")
-            //                 };
-            //             });
-
-            // console.log(myGraph.graph.nodes.length + "\n" + myGraph.graph.links.length);
-            // console.log(JSON.stringify(myGraph.graph.links));
-
-
-            // d3.selectAll(".link")
-            //     .each(function(d,i){
-            //         if(!myGraph.state.alerted){
-            //         alert(JSON.stringify(d));
-            //             myGraph.state.alerted = true;
-            //         }
-            //         // myself.graph.links[i] = d;
-            //     });
-            // return;
-            // d3.selectAll(".node")
-            //     .each(function(d,i){
-            //         myself.graph.nodes[i] = d;
-            //     });
-
-            // alert(mygraph.graph.nodes.first().id)
-
-            // var newSvg = mySvg.parentNode.replaceChild(xmlDoc, mySvg);
-            // alert( "Got the file \n"
-            //     +"name: " + f.name + "\n"
-            //         +"type: " + f.type + "\n"
-            //         +"size: " + f.size + " bytes\n"
-            //         + "starts with: " + contents.substr(1, contents.indexOf("\n"))
-            // );
-
-        }
-        r.readAsText(f);
-    } else {
-        alert("Failed to load file");
+        // var t = d3.transition().duration(750).call(myGraph.zoom.transform, d3.zoomIdentity);
+        // d3.select("#containergroup").transition(t);
+        // console.log(myGraph.zoom);
+        // console.log(d3.zoomTransform(myGraph.container));
+        // console.log(d3.zoomTransform(this));
+        // console.log(myGraph.container.("transform"));
+        // console.log(myGraph.zoom.transform);
     }
-}
-document.getElementById('upload').addEventListener('change', readSingleFile, false);
-$('#upload').css("visibility", "hidden");
-$('#fakeUpload').click(function(e) {
-    e.preventDefault();
-    $('#upload').trigger('click');   
-});
+
+    // Set the current value to null when clicking,
+    // This makes sure the 'change' event is fired when reloading
+    // the same file
+    document.getElementById('upload').addEventListener('click', function() {
+        this.value = null
+    });
+    document.getElementById('upload').addEventListener('change', readSingleFile);
+    $('#fakeUpload').click(function(e) {
+        e.preventDefault();
+        $('#upload').trigger('click');
+    });
+
+    // $('#upload').on('click', function () {
+    //     this.value = null;
+    // };
+
+    // $('#upload').on('', readSingleFile);
 
 
 
-// if($.browser.mozilla) {
-//     $('.trigger-file-input').click(function() {
-//         $('#fileinput').click();
-//     });
-// }
+    // if($.browser.mozilla) {
+    //     $('.trigger-file-input').click(function() {
+    //         $('#fileinput').click();
+    //     });
+    // }

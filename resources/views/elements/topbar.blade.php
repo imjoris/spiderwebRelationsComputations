@@ -31,7 +31,7 @@
                 <!-- </li> -->
 
 
-                <li><a href="#">Page 3</a></li>
+                <li><a href="#" onClick="test()">Page 3</a></li>
             </ul>
 
         </div>
