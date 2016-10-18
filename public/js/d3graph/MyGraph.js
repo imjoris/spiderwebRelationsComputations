@@ -127,6 +127,12 @@ function MyGraph() {
     //##################################################
     // {{{
     this.ticked = function() {
+
+        self.containerNodes.selectAll('.node')
+            .attr("cx", function(d) { return d.x = Math.max(15, Math.min(self.width - 15, d.x)); })
+            .attr("cy", function(d) { return d.y = Math.max(15, Math.min(self.height - 15, d.y)); });
+
+
         self.containerLinks.selectAll(".link")
             .attr("x1", function(d) {
                 return d.source.x;
