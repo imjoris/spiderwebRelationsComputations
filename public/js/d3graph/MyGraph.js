@@ -92,9 +92,9 @@ function MyGraph() {
         var node = newNodes.append("circle")
             // .on("mousedown", this.nodeMouseDown)
             // .on("mouseup", this.nodeMouseUp)
-            .on("click", this.nodeClick)
-            .on("mouseover", this.nodeMouseOver)
-            .on("mouseout", this.nodeMouseOut)
+            .on("click.mynode", this.nodeClick)
+            .on("mouseover.mynode", this.nodeMouseOver)
+            .on("mouseout.mynode", this.nodeMouseOut)
             .attr("class", "nodecircle")
             .style("fill", function(d) {
                 return self.color(d.group);
@@ -167,6 +167,7 @@ function MyGraph() {
                 var myX = coordinates[0];
                 var myY = coordinates[1];
             } catch (err) {
+                console.log(err);
                 return;
             }
 
@@ -205,12 +206,15 @@ function MyGraph() {
     //##################################################
     // {{{
     this.svgMouseMove = function(d) {
-        if (self.state.shiftNodeDrag) {
-            self.updateDragLine();
+        if (!self.state.mouseOverNode) {
+            if (self.state.shiftNodeDrag) {
+                self.updateDragLine();
+            }
         }
     };
 
     this.svgClick = function(d) {
+        d3.event.stopPropagation();
         // if (!self.state.shiftNodeDrag && myself.state.mouseOverNode == null) {
         console.log("svg click");
         if (!self.state.shiftNodeDrag) {
@@ -344,7 +348,7 @@ function MyGraph() {
     //##################################################
     // {{{
     self.getMouseCoordinates = function() {
-        var coordinates = new Array();
+        var coordinates = [];
         try {
             coordinates = d3.mouse(self.container.node());
         } catch (err) {
@@ -383,7 +387,6 @@ function MyGraph() {
         d3.event.stopPropagation();
         if (self.state.shiftNodeDrag) {
             if (d.id !== self.state.mouseDownNode.id) {
-                console.log("test");
                 var newLink = {
                     "source": self.state.mouseDownNode,
                     "target": d
@@ -455,10 +458,21 @@ function MyGraph() {
     };
 
     self.nodeMouseOver = function(d) {
+        d3.event.stopPropagation();
+        console.log("node over");
         self.state.mouseOverNode = d;
+        self.dragline
+            .attr("x2", d.x)
+            .attr("y2", d.y)
+        // self.svg.on("click.mysvg", null);
+        // d3.selectAll("circle").on("click.mynode", this.nodeClick)
     };
     self.nodeMouseOut = function(d) {
+        d3.event.stopPropagation();
+        console.log("node out");
         self.state.mouseOverNode = null;
+        // d3.selectAll("circle").on("click.mynode", null);
+        // self.svg.on("click.mysvg", this.svgClick)
     };
     // end node mouse event listeners
     // }}}
@@ -615,7 +629,7 @@ function MyGraph() {
         .attr("id", "svgid")
         .attr("width", this.width)
         .attr("height", this.height)
-        .on("click", this.svgClick)
+        .on("click.mysvg", this.svgClick)
         .on("mousemove", this.svgMouseMove)
         .call(this.zoom)
         .on("dblclick.zoom", null)
@@ -631,9 +645,10 @@ function MyGraph() {
     this.container = this.svg.append("svg:g").attr("id", "containergroup");
     this.containerLinks = this.container.append("svg:g").attr("id", "containerlinksgroup");
     this.containerNodes = this.container.append("svg:g").attr("id", "containernodesgroup");
+    this.containerDragLine = this.container.append("svg:g").attr("id", "containerdraglinegroup");
     this.color = d3.scaleOrdinal(d3.schemeCategory20);
 
-    this.dragline = this.container.append("line")
+    this.dragline = this.containerDragLine.append("line")
         .attr("id", "draglineid")
         .attr("class", "hiddendragline");
 
@@ -662,6 +677,12 @@ function MyGraph() {
         .on("tick", this.ticked);
 
 }
+// $(".nodecircle").on("hover", function(d) {
+//     $(".nodecircle").off("click"); // Remove previous events, if have
+//     $(".nodecircle").on("click", function(d) {
+//         alert("Clicked!");
+//     });
+// });
 
 // }}} end of initialiization
 
@@ -824,7 +845,9 @@ function readSingleFile(evt) {
             myGraph.graph.nodes = data.nodes;
             myGraph.graph.links = newLinks;
 
-            myGraph.maxId = Math.max.apply(Math,array.map(function(o){return o.id;}))
+            myGraph.maxId = Math.max.apply(Math, array.map(function(o) {
+                return o.id;
+            }))
             myGraph.maxId += 1;
 
             // TODO: restore the state

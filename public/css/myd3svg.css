@@ -5,14 +5,16 @@
 /* } */
 
 .dragline {
-  /* stroke: #000; */
-  stroke: green;
-  stroke-width: 4; 
-  stroke-opacity: 0.6;
+    /* stroke: #000; */
+    stroke: green;
+    stroke-width: 4; 
+    stroke-opacity: 0.6;
 
 }
 .hiddendragline{
     stroke-opacity: 0;
+
+    pointer-events: none;
 }
 
 .link {
@@ -20,8 +22,19 @@
     /* stroke: black; */
     stroke-opacity: .8;
     stroke-width: 2;
+
+    pointer-events: none;
 }
 
+/* .node { */
+/*     stroke: #fff; */
+/*     stroke-width: 1.5px; */
+/*     r: 8; */
+/* } */
+
+#draglineid {
+    pointer-events: none;
+}
 .nodecircle {
     stroke: #fff;
     stroke-width: 1.5px;
@@ -33,12 +46,13 @@
 /*   r: 8; */
 /* } */
 
-.selectednode{
+/* .selectednode>circle{ */
+.selectednode {
     /* fill: green; */
     opacity: 0.6;
-    r: 10;
+    r: 12;
     stroke: blue;
-    stroke-width: 2px;
+    stroke-width: 1px;
 }
 
 .node.fixed {
@@ -47,7 +61,7 @@
 
 
 /* text { */
-.nodeLabel{
+.node>text{
     /* fill: #000; */
     font: 10px sans-serif;
     pointer-events: none;
