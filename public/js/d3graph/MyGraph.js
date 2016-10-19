@@ -16,15 +16,6 @@ function MyGraph() {
         DELETE_KEY: 46,
         ENTER_KEY: 13,
     };
-    this.defaults = {
-        forceLinkDistance: 100,
-        forceChargeStrength: -50,
-        forceChargeDistanceMin: 20,
-        forceChargeDistanceMax: 800,
-
-        forceCollideRadius: 10,
-        forceCollideStrength: 0.9,
-    };
     this.state = {
         hasForce: true,
         shiftNodeDrag: false,
@@ -45,6 +36,24 @@ function MyGraph() {
     this.width = window.innerWidth - 320;
     this.height = window.innerHeight - 52;
 
+    this.defaults = {
+        forceLinkDistance: 100,
+        forceChargeStrength: -50,
+        forceChargeDistanceMin: 20,
+        forceChargeDistanceMax: 800,
+        forceCollideRadius: 10,
+        forceCollideStrength: 0.9,
+
+        // The center is width/2, height/2;
+        // So setting the cxMin to width/2-width,
+        // means the cxMin is the center x minus the svg width,
+        // meaning the user can still go half a page to the left before
+        // hitting the bounding box. (Half a page to the edge, so half a page width left)
+        cxMin: (this.width/2)-this.width,
+        cxMax: (this.width/2)+this.width,
+        cyMin: (this.height/2)-this.height,
+        cyMax: (this.height/2)+this.height,
+    };
 
     //##################################################
     //# Draw the graph
@@ -57,7 +66,6 @@ function MyGraph() {
         var link = this.containerLinks.selectAll(".link")
             .data(links, function(d) {
                 return d.source.id + '-' + d.target.id;
-                // return d;
             });
 
         link.enter()
@@ -76,9 +84,7 @@ function MyGraph() {
 
         var gnodes = this.containerNodes.selectAll('.node')
             .data(nodes, function(d) {
-                // return d.id + "-" + d.group;
                 return d.id;
-                // return d;
             });
 
         var newNodes = gnodes.enter()
@@ -129,9 +135,16 @@ function MyGraph() {
     this.ticked = function() {
 
         self.containerNodes.selectAll('.node')
-            .attr("cx", function(d) { return d.x = Math.max(15, Math.min(self.width - 15, d.x)); })
-            .attr("cy", function(d) { return d.y = Math.max(15, Math.min(self.height - 15, d.y)); });
-
+            .attr("cx", function(d) {
+                d.x = d.x < self.defaults.cxMin ? self.defaults.cxMin : d.x;
+                d.x = d.x > self.defaults.cxMax ? self.defaults.cxMax : d.x;
+                return d.x;
+            })
+            .attr("cy", function(d) {
+                d.y = d.y < self.defaults.cyMin ? self.defaults.cyMin : d.y;
+                d.y = d.y > self.defaults.cyMax ? self.defaults.cyMax : d.y;
+                return d.y;
+            });
 
         self.containerLinks.selectAll(".link")
             .attr("x1", function(d) {
@@ -222,7 +235,7 @@ function MyGraph() {
     this.svgClick = function(d) {
         d3.event.stopPropagation();
         // if (!self.state.shiftNodeDrag && myself.state.mouseOverNode == null) {
-        console.log("svg click");
+        // console.log("svg click");
         if (!self.state.shiftNodeDrag) {
             if (d3.event.shiftKey) {
                 self.stopForce();
@@ -389,7 +402,7 @@ function MyGraph() {
     // };
 
     this.nodeClick = function(d) {
-        console.log("nodeclick");
+        // console.log("nodeclick");
         d3.event.stopPropagation();
         if (self.state.shiftNodeDrag) {
             if (d.id !== self.state.mouseDownNode.id) {
@@ -465,7 +478,7 @@ function MyGraph() {
 
     self.nodeMouseOver = function(d) {
         d3.event.stopPropagation();
-        console.log("node over");
+        // console.log("node over");
         self.state.mouseOverNode = d;
         self.dragline
             .attr("x2", d.x)
@@ -475,7 +488,7 @@ function MyGraph() {
     };
     self.nodeMouseOut = function(d) {
         d3.event.stopPropagation();
-        console.log("node out");
+        // console.log("node out");
         self.state.mouseOverNode = null;
         // d3.selectAll("circle").on("click.mynode", null);
         // self.svg.on("click.mysvg", this.svgClick)
@@ -649,14 +662,31 @@ function MyGraph() {
     };
 
     this.container = this.svg.append("svg:g").attr("id", "containergroup");
+    this.containerBoundBox = this.container.append("svg:g").attr("id", "containerBoundBox");
+    this.containerDragLine = this.container.append("svg:g").attr("id", "containerdraglinegroup");
     this.containerLinks = this.container.append("svg:g").attr("id", "containerlinksgroup");
     this.containerNodes = this.container.append("svg:g").attr("id", "containernodesgroup");
-    this.containerDragLine = this.container.append("svg:g").attr("id", "containerdraglinegroup");
     this.color = d3.scaleOrdinal(d3.schemeCategory20);
 
     this.dragline = this.containerDragLine.append("line")
         .attr("id", "draglineid")
         .attr("class", "hiddendragline");
+
+
+    var boxX = self.defaults.cxMin;
+    var boxY = self.defaults.cyMin;
+    var boxWidth = (self.defaults.cxMax-self.defaults.cxMin);
+    var boxHeight = (self.defaults.cyMax-self.defaults.cyMin);
+
+    self.boundBox = self.containerBoundBox.append("rect")
+        .attr("x", boxX)
+        .attr("y", boxY)
+        .attr("width", boxWidth)
+        .attr("height", boxHeight)
+        .style("stroke", "greenyellow")
+        .style("opacity", "0.8")
+        .style("fill", "none")
+        .style("stroke-width", 6);
 
     this.simulation = d3.forceSimulation()
         .stop()
@@ -677,6 +707,7 @@ function MyGraph() {
             .strength(0.9)
 
         )
+        // .force("center", d3.forceCenter(0,0));
         // .force("center", d3.forceCenter(this.width / 2, this.height / 2));
 
     this.simulation
@@ -819,7 +850,9 @@ function readSingleFile(evt) {
             // .on("end", function() {
 
             $("#containergroup").empty();
-            myGraph.dragline = myGraph.container.append("line")
+
+            // TODO: DRY. Create init funtion or something
+            myGraph.dragline = myGraph.containerDragLine.append("line")
                 .attr("id", "draglineid")
                 .attr("class", "hiddendragline");
             // console.log(contents);
